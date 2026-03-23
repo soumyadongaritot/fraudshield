@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>FraudShield History</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#080b12; --bg2:#0d1117; --border:#1e2d3d;
+      --cyan:#00e5ff; --orange:#ff6b2b; --green:#00ff88;
+      --yellow:#ffd600; --red:#ff3d5a; --text:#cdd6e8; --muted:#4a5568;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { width:700px; min-height:500px; background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; }
+    .header { background:linear-gradient(135deg,#0d1b2a,#0a1628); padding:16px 20px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+    .logo { font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:var(--cyan); }
+    .logo span { color:var(--orange); }
+    .badge { background:#00e5ff12; color:var(--cyan); font-size:9px; font-family:'JetBrains Mono',monospace; padding:3px 8px; border-radius:20px; border:1px solid #00e5ff30; }
+    .clear-btn { margin-left:auto; background:#ff3d5a15; color:var(--red); border:1px solid #ff3d5a30; font-family:'JetBrains Mono',monospace; font-size:10px; padding:5px 12px; border-radius:6px; cursor:pointer; }
+    .clear-btn:hover { background:#ff3d5a25; }
+    .stats-bar { display:flex; gap:12px; padding:12px 20px; background:var(--bg2); border-bottom:1px solid var(--border); }
+    .stat { text-align:center; flex:1; padding:8px; border-radius:8px; border:1px solid var(--border); }
+    .stat-num { font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; }
+    .stat-label { font-size:10px; color:var(--muted); margin-top:2px; }
+    .search-bar { padding:12px 20px; background:var(--bg2); border-bottom:1px solid var(--border); }
+    .search-input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11px; padding:8px 12px; border-radius:6px; outline:none; }
+    .search-input:focus { border-color:#00e5ff40; }
+    .filter-bar { display:flex; gap:8px; padding:8px 20px; background:var(--bg2); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .filter-btn { font-size:10px; padding:4px 12px; border-radius:20px; cursor:pointer; font-family:'JetBrains Mono',monospace; border:1px solid var(--border); background:transparent; color:var(--muted); transition:all 0.2s; }
+    .filter-btn.active { background:#00e5ff15; color:var(--cyan); border-color:#00e5ff40; }
+    .history-list { padding:12px 20px; max-height:600px; overflow-y:auto; }
+    .history-item { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:8px; display:flex; align-items:center; gap:12px; transition:border-color 0.2s; }
+    .history-item:hover { border-color:#2a3f55; }
+    .score-badge { width:46px; height:46px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; border:2px solid; }
+    .item-info { flex:1; min-width:0; }
+    .item-url { font-size:12px; font-family:'JetBrains Mono',monospace; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px; }
+    .item-meta { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .item-status { font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; }
+    .item-time { font-size:10px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+    .item-type { font-size:10px; color:var(--muted); }
+    .item-risk { font-size:9px; color:#4a5568; font-family:'JetBrains Mono',monospace; }
+    .empty-state { text-align:center; padding:60px 20px; color:var(--muted); font-family:'JetBrains Mono',monospace; }
+    .empty-icon { font-size:40px; margin-bottom:12px; }
+    .empty-text { font-size:12px; line-height:1.8; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Fraud<span>Shield</span></div>
+    <div class="badge">SCAN HISTORY</div>
+    <button class="clear-btn" id="clearBtn">🗑 Clear All</button>
+  </div>
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num" id="totalCount" style="color:var(--cyan)">0</div>
+      <div class="stat-label">Total Scans</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="safeCount" style="color:var(--green)">0</div>
+      <div class="stat-label">Safe</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="suspCount" style="color:var(--yellow)">0</div>
+      <div class="stat-label">Suspicious</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="dangerCount" style="color:var(--red)">0</div>
+      <div class="stat-label">Dangerous</div>
+    </div>
+  </div>
+  <div class="search-bar">
+    <input class="search-input" id="searchInput"
+      placeholder="🔍 Search URLs..." type="text"/>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="safe">✅ Safe</button>
+    <button class="filter-btn" data-filter="probably">🟢 Probably Safe</button>
+    <button class="filter-btn" data-filter="suspicious">⚠️ Suspicious</button>
+    <button class="filter-btn" data-filter="phishing">🚨 Phishing</button>
+    <button class="filter-btn" data-filter="malicious">🔴 Malicious</button>
+  </div>
+  <div class="history-list" id="historyList">
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">
+        No scans yet.<br>Browse websites to start scanning!
+      </div>
+    </div>
+  </div>
+  <script src="history.js"></script>
+</body>
+</html>

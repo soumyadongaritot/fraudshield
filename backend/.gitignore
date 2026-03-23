@@ -1,0 +1,26 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Model files (too large for GitHub)
+*.pkl
+scaler.pkl
+fraud_model.pkl
+
+# Virtual environment
+venv/
+env/
+.env
+
+# Data files
+openphish.txt
+phishtank.csv
+phishing_active.txt
+
+# VS Code settings
+.vscode/
+
+# Windows files
+Thumbs.db
+Desktop.ini
