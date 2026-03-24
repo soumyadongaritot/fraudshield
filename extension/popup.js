@@ -2,12 +2,9 @@
 const API_URL = "https://fraudshield-2u9l.onrender.com";
 
 document.addEventListener("DOMContentLoaded", async () => {
-
-  // Scan button
   document.getElementById("scanBtn")
     .addEventListener("click", requestScan);
 
-  // History button — opens in new tab correctly
   document.getElementById("historyBtn")
     .addEventListener("click", () => {
       chrome.tabs.create({
@@ -15,17 +12,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-  // Get current tab URL
-  const tabs = await chrome.tabs.query({
-    active: true, currentWindow: true
-  });
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const url = tabs[0]?.url || "";
-  document.getElementById("urlDisplay").textContent =
-    url || "No URL";
+  document.getElementById("urlDisplay").textContent = url || "No URL";
 
-  if (url &&
-      !url.startsWith("chrome://") &&
-      !url.startsWith("chrome-extension://")) {
+  if (url && !url.startsWith("chrome://") && !url.startsWith("chrome-extension://")) {
     requestScan();
   } else {
     showError("Navigate to a website first.");
@@ -38,14 +29,10 @@ async function requestScan() {
   showLoading();
 
   try {
-    const tabs = await chrome.tabs.query({
-      active: true, currentWindow: true
-    });
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     const url = tabs[0]?.url || "";
 
-    if (!url ||
-        url.startsWith("chrome://") ||
-        url.startsWith("chrome-extension://")) {
+    if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) {
       showError("Navigate to a real website first.");
       btn.disabled = false;
       return;
@@ -60,17 +47,12 @@ async function requestScan() {
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
     const data = await res.json();
-    document.getElementById("scanTime").textContent =
-      new Date().toLocaleTimeString();
-
+    document.getElementById("scanTime").textContent = new Date().toLocaleTimeString();
     showResult(data);
     saveToHistory(data, url);
 
   } catch (err) {
-    showError(
-      "Backend not running!\nRun:\n" +
-      "py -3.11 -m uvicorn main:app --port 8000"
-    );
+    showError("Backend unreachable!\nThe server may be waking up.\nPlease wait 30 seconds and try again.");
   }
   btn.disabled = false;
 }
@@ -161,9 +143,7 @@ function showResult(data) {
   if (tldTrust === "Suspicious TLD") tldColor = "#ff3d5a";
 
   const flagsHTML = flags.length > 0
-    ? flags.map(f =>
-        `<div class="flag-item">${f.message}</div>`
-      ).join("")
+    ? flags.map(f => `<div class="flag-item">${f.message}</div>`).join("")
     : `<div class="flag-item">✅ No suspicious patterns detected</div>`;
 
   document.getElementById("content").innerHTML = `
@@ -217,9 +197,7 @@ function showResult(data) {
           ${age.age_years != null ? age.age_years + " yrs" : "Unknown"}
         </div>
         <div class="info-sub">
-          ${age.estimated_year
-            ? "Est. " + age.estimated_year
-            : age.age_label ?? ""}
+          ${age.estimated_year ? "Est. " + age.estimated_year : age.age_label ?? ""}
         </div>
       </div>
     </div>

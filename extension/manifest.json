@@ -11,7 +11,8 @@
   "host_permissions": [
     "<all_urls>",
     "http://127.0.0.1:8000/*",
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "https://fraudshield-2u9l.onrender.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -37,6 +38,6 @@
     "128": "icons/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8000 http://localhost:8000"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src http://127.0.0.1:8000 http://localhost:8000 https://fraudshield-2u9l.onrender.com"
   }
 }
