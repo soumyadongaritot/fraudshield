@@ -1,5 +1,7 @@
-// popup.js - FraudShield v3.0
+// popup.js - FraudShield v3.1
 const API_URL = "https://fraudshield-2u9l.onrender.com";
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 5000;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("scanBtn")
@@ -23,10 +25,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      showLoading(attempt);
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+    }
+  }
+}
+
 async function requestScan() {
   const btn = document.getElementById("scanBtn");
   btn.disabled = true;
-  showLoading();
 
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -38,13 +53,11 @@ async function requestScan() {
       return;
     }
 
-    const res = await fetch(`${API_URL}/check`, {
+    const res = await fetchWithRetry(`${API_URL}/check`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url })
     });
-
-    if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
     const data = await res.json();
     document.getElementById("scanTime").textContent = new Date().toLocaleTimeString();
@@ -52,14 +65,22 @@ async function requestScan() {
     saveToHistory(data, url);
 
   } catch (err) {
-    showError("Backend unreachable!\nThe server may be waking up.\nPlease wait 30 seconds and try again.");
+    showError(
+      "⚠️ Backend unreachable after 3 attempts.\n" +
+      "The server may still be waking up.\n" +
+      "Please wait 30 seconds and click Scan again."
+    );
   }
+
   btn.disabled = false;
 }
 
-function showLoading() {
+function showLoading(attempt = 1) {
+  const msg = attempt === 1
+    ? "Analyzing with AI..."
+    : `Server waking up... (attempt ${attempt}/${MAX_RETRIES})`;
   document.getElementById("content").innerHTML =
-    `<div class="loading"><div class="spinner"></div>Analyzing with AI...</div>`;
+    `<div class="loading"><div class="spinner"></div>${msg}</div>`;
 }
 
 function showError(msg) {
