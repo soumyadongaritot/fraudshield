@@ -1,5 +1,5 @@
 // popup.js - FraudShield v3.0
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://fraudshield-2u9l.onrender.com";
 
 document.addEventListener("DOMContentLoaded", async () => {
 
