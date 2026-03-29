@@ -18,8 +18,8 @@
     .badge { background:#00e5ff12; color:var(--cyan); font-size:9px; font-family:'JetBrains Mono',monospace; padding:3px 8px; border-radius:20px; border:1px solid #00e5ff30; letter-spacing:1px; }
     .history-link { margin-left:auto; background:#00e5ff15; color:var(--cyan); border:1px solid #00e5ff30; font-family:'JetBrains Mono',monospace; font-size:9px; padding:4px 10px; border-radius:6px; cursor:pointer; text-decoration:none; }
     .history-link:hover { background:#00e5ff25; }
-    .url-bar { background:var(--bg2); border-bottom:1px solid var(--border); padding:8px 16px; display:flex; align-items:center; gap:8px; }
-    .url-text { font-size:10px; font-family:'JetBrains Mono',monospace; color:#6b7d99; word-break:break-all; flex:1; line-height:1.4; }
+    .url-bar { background:var(--bg2); border-bottom:1px solid var(--border); padding:8px 16px; }
+    .url-text { font-size:10px; font-family:'JetBrains Mono',monospace; color:#6b7d99; word-break:break-all; line-height:1.4; }
     .main { padding:14px; }
     .score-row { display:flex; align-items:center; gap:14px; margin-bottom:12px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:14px; }
     .score-ring { position:relative; width:84px; height:84px; flex-shrink:0; }
@@ -54,9 +54,23 @@
     .scan-btn { width:100%; background:linear-gradient(135deg,#00e5ff15,#0066ff15); border:1px solid #00e5ff30; color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; padding:10px; border-radius:8px; cursor:pointer; transition:all 0.2s; margin-bottom:8px; }
     .scan-btn:hover { background:linear-gradient(135deg,#00e5ff25,#0066ff25); }
     .scan-btn:disabled { opacity:0.4; cursor:not-allowed; }
-    .export-row { display:flex; gap:7px; margin-bottom:4px; }
-    .export-btn { flex:1; background:#ffffff08; border:1px solid var(--border); color:#6b7d99; font-family:'JetBrains Mono',monospace; font-size:9px; padding:7px; border-radius:7px; cursor:pointer; transition:all 0.2s; letter-spacing:0.5px; }
+    .export-row { display:flex; gap:7px; margin-bottom:10px; }
+    .export-btn { flex:1; background:#ffffff08; border:1px solid var(--border); color:#6b7d99; font-family:'JetBrains Mono',monospace; font-size:9px; padding:7px; border-radius:7px; cursor:pointer; transition:all 0.2s; }
     .export-btn:hover { background:#ffffff12; color:var(--text); border-color:#2e3d4d; }
+
+    /* Live scan log */
+    .live-log { display:none; background:var(--bg2); border:1px solid var(--border); border-radius:9px; padding:10px; margin-bottom:10px; }
+    .live-log-title { font-size:8px; font-family:'JetBrains Mono',monospace; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .live-dot { width:5px; height:5px; border-radius:50%; background:var(--cyan); animation:blink 1.2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    .log-row { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid #0d1117; }
+    .log-row:last-child { border-bottom:none; }
+    .log-score { font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; min-width:28px; }
+    .log-info { flex:1; min-width:0; }
+    .log-domain { font-size:10px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .log-time { font-size:9px; color:var(--muted); margin-top:1px; }
+    .log-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+
     .loading { text-align:center; padding:30px 0; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; }
     .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--cyan); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -67,16 +81,26 @@
 <body>
   <div class="header">
     <div class="logo">Fraud<span>Shield</span></div>
-    <div class="badge">v3.0 AI</div>
+    <div class="badge">v3.1 AI</div>
     <span class="history-link" id="historyBtn">📋 HISTORY</span>
   </div>
   <div class="url-bar">
     <div class="url-text" id="urlDisplay">Loading...</div>
   </div>
   <div class="main">
+    <!-- Live scan log -->
+    <div class="live-log" id="liveScanLog">
+      <div class="live-log-title">
+        <div class="live-dot"></div>
+        Live scan feed
+      </div>
+    </div>
+
+    <!-- Scan result -->
     <div id="content">
       <div class="loading"><div class="spinner"></div>Analyzing with AI...</div>
     </div>
+
     <button class="scan-btn" id="scanBtn">⟳ RE-SCAN THIS PAGE</button>
     <div class="export-row">
       <button class="export-btn" id="exportCSVBtn">⬇ EXPORT CSV</button>
@@ -84,7 +108,7 @@
     </div>
   </div>
   <div class="footer">
-    <span>FraudShield v3.0 — AI Fraud Detection</span>
+    <span>FraudShield v3.1 — AI Fraud Detection</span>
     <span id="scanTime"></span>
   </div>
   <script src="popup.js"></script>
