@@ -1,43 +1,43 @@
 {
   "manifest_version": 3,
-  "name": "FraudShield",
-  "version": "3.1",
-  "description": "AI-powered phishing and fraud detection for every page you visit.",
+  "name": "FraudShield - AI Fraud Detector",
+  "version": "3.2.0",
+  "description": "Real-time AI-powered fraud website detection",
   "permissions": [
     "activeTab",
-    "storage",
     "tabs",
+    "storage",
     "notifications",
     "downloads"
   ],
   "host_permissions": [
-    "https://fraudshield-1-pkvb.onrender.com/*",
-    "<all_urls>"
+    "<all_urls>",
+    "https://fraudshield-2u9l.onrender.com/*"
   ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16":  "icons/icon16.png",
-      "48":  "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
+      "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
     }
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://fraudshield-1-pkvb.onrender.com"
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "icons": {
-    "16":  "icons/icon16.png",
-    "48":  "icons/icon48.png",
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
     "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-2u9l.onrender.com;"
   }
 }

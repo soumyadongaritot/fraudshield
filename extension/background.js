@@ -1,7 +1,7 @@
-// FraudShield v3.1 — Background Service Worker
+// FraudShield v3.2 — Background Service Worker
 // Handles: notifications, auto-CSV, badge updates
 
-const API_URL = "https://fraudshield-1-pkvb.onrender.com";
+const API_URL = "https://fraudshield-2u9l.onrender.com";
 
 // ── Badge ──────────────────────────────────────────────
 function getBadgeColor(score) {
@@ -17,7 +17,7 @@ function sendNotification(result, url) {
   const domain   = result.domain_info?.domain || new URL(url).hostname;
   const category = result.category;
 
-  let title, message, iconColor;
+  let title, message;
 
   if (score < 25) {
     title   = "🔴 MALICIOUS PAGE DETECTED";
@@ -43,11 +43,11 @@ function sendNotification(result, url) {
 }
 
 // ── Auto-save CSV ──────────────────────────────────────
-function autoSaveCSV(entry) {
+function autoSaveCSV() {
   chrome.storage.local.get("scanHistory", (result) => {
     const history = result.scanHistory || [];
+    if (history.length === 0) return;
 
-    // Build full CSV from history
     const headers = ["URL","Safety Score","Category","Risk Level","Site Type","Domain","Protocol","Date & Time"];
     const rows = history.map(e => {
       const date = new Date(e.timestamp).toLocaleString();
@@ -68,20 +68,24 @@ function autoSaveCSV(entry) {
     const b64     = btoa(unescape(encodeURIComponent(csv)));
     const dataUrl = "data:text/csv;base64," + b64;
 
-    // Save to downloads folder silently
+    const today = new Date().toISOString().split("T")[0];
+
     chrome.downloads.download({
       url:      dataUrl,
-      filename: "fraudshield-scans.csv",
+      filename: `fraudshield-${today}.csv`,
       saveAs:   false,
       conflictAction: "overwrite"
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        console.warn("CSV download error:", chrome.runtime.lastError.message);
+      }
     });
   });
 }
 
-// ── Listen for messages from content.js ───────────────
+// ── Listen for messages from popup/content ─────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-  // Scan result from content script
   if (message.type === "SCAN_COMPLETE") {
     const { result, url, tabId } = message;
     const score = result.safety_score;
@@ -98,18 +102,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
     }
 
-    // 2. Send desktop notification for all risky pages (score < 85)
-    if (score < 85) {
+    // 2. Send desktop notification for risky pages only
+    if (score < 65) {
       sendNotification(result, url);
     }
 
     // 3. Auto-save CSV
-    autoSaveCSV({ url, score, result });
+    autoSaveCSV();
 
     sendResponse({ ok: true });
   }
 
-  // Badge update only
   if (message.type === "UPDATE_BADGE") {
     const tabId = sender.tab?.id;
     if (!tabId) return;
@@ -121,6 +124,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       color: getBadgeColor(message.score),
       tabId: tabId
     });
+  }
+
+  if (message.type === "EXPORT_CSV") {
+    autoSaveCSV();
+    sendResponse({ ok: true });
   }
 });
 
