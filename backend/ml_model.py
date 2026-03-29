@@ -735,4 +735,4 @@ def predict_url(url: str) -> dict:
         "flags":        get_flags(features, trusted),
         "features":     features,
         "domain_info":  domain_info
-    }
+    }# v3.2
