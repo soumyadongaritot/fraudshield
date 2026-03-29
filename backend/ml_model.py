@@ -387,33 +387,126 @@ def get_tld(domain: str) -> str:
 
 def estimate_domain_age(domain: str) -> dict:
     d = domain.replace("www.", "").lower()
+
     KNOWN_DOMAINS = {
-        "google.com": 1997, "youtube.com": 2005, "microsoft.com": 1991,
-        "apple.com": 1987, "amazon.com": 1994, "amazon.in": 2004,
-        "facebook.com": 2004, "twitter.com": 2006, "instagram.com": 2010,
-        "linkedin.com": 2002, "reddit.com": 2005, "yahoo.com": 1995,
-        "bing.com": 2009, "duckduckgo.com": 2008, "whatsapp.com": 2009,
-        "netflix.com": 1997, "spotify.com": 2006, "github.com": 2007,
-        "stackoverflow.com": 2008, "paypal.com": 1999, "stripe.com": 2010,
-        "flipkart.com": 2007, "myntra.com": 2007, "paytm.com": 2010,
-        "phonepe.com": 2015, "zerodha.com": 2010, "groww.in": 2016,
-        "sbi.co.in": 1955, "hdfcbank.com": 1994, "icicibank.com": 1994,
-        "axisbank.com": 1993, "rbi.org.in": 1935, "irctc.co.in": 1999,
-        "wikipedia.org": 2001, "coursera.org": 2012, "udemy.com": 2010,
+        # Search / Portal
+        "google.com": 1997, "google.co.in": 1997, "google.co.uk": 1997,
+        "youtube.com": 2005, "gmail.com": 2004, "yahoo.com": 1995,
+        "bing.com": 2009, "duckduckgo.com": 2008, "ask.com": 1996,
+        "baidu.com": 2000, "yandex.com": 1997,
+        # Microsoft
+        "microsoft.com": 1991, "office.com": 2000, "outlook.com": 1997,
+        "live.com": 2005, "hotmail.com": 1996, "msn.com": 1995,
+        "azure.microsoft.com": 2010, "xbox.com": 2000, "skype.com": 2003,
+        # Apple
+        "apple.com": 1987, "icloud.com": 2012, "itunes.com": 1999,
+        # Amazon
+        "amazon.com": 1994, "amazon.in": 2004, "amazon.co.uk": 1998,
+        "aws.amazon.com": 2006,
+        # Social
+        "facebook.com": 2004, "instagram.com": 2010, "whatsapp.com": 2009,
+        "twitter.com": 2006, "x.com": 1996, "linkedin.com": 2002,
+        "reddit.com": 2005, "pinterest.com": 2010, "snapchat.com": 2011,
+        "tiktok.com": 2016, "discord.com": 2015, "telegram.org": 2013,
+        "signal.org": 2014, "twitch.tv": 2011, "quora.com": 2009,
+        "tumblr.com": 2007, "threads.net": 2023, "meta.com": 2021,
+        # Entertainment
+        "netflix.com": 1997, "spotify.com": 2006, "hulu.com": 2007,
+        "disneyplus.com": 2019, "primevideo.com": 2016, "hotstar.com": 2015,
+        "sonyliv.com": 2013, "zee5.com": 2018, "jiosaavn.com": 2007,
+        "gaana.com": 2010, "wynk.in": 2014, "soundcloud.com": 2007,
+        "pandora.com": 2000, "deezer.com": 2007, "tidal.com": 2014,
+        "vimeo.com": 2004, "youtube.com": 2005,
+        # Tech / Dev
+        "github.com": 2007, "gitlab.com": 2011, "bitbucket.org": 2008,
+        "stackoverflow.com": 2008, "cloudflare.com": 2009,
+        "digitalocean.com": 2011, "heroku.com": 2007, "vercel.com": 2015,
+        "netlify.com": 2014, "render.com": 2019, "notion.so": 2016,
+        "figma.com": 2016, "canva.com": 2013, "slack.com": 2013,
+        "zoom.us": 2011, "dropbox.com": 2007, "box.com": 2005,
+        "adobe.com": 1986, "shopify.com": 2006, "wordpress.com": 2005,
+        "npmjs.com": 2010, "pypi.org": 2003, "docker.com": 2013,
+        "huggingface.co": 2016, "medium.com": 2012,
+        # AI
         "openai.com": 2015, "claude.ai": 2022, "anthropic.com": 2021,
-        "bbc.com": 1995, "cnn.com": 1995, "ndtv.com": 1997,
-        "timesofindia.com": 1838, "thehindu.com": 1878,
-        "who.int": 1948, "cdc.gov": 1946, "mayoclinic.org": 1998,
-        "booking.com": 1996, "airbnb.com": 2008, "makemytrip.com": 2000,
-        "zoom.us": 2011, "slack.com": 2013, "notion.so": 2016,
-        "virustotal.com": 2004, "swiggy.com": 2014, "zomato.com": 2008,
-        "discord.com": 2015, "telegram.org": 2013, "tiktok.com": 2016,
-        "coinbase.com": 2012, "binance.com": 2017, "razorpay.com": 2014,
-        "shopify.com": 2006, "adobe.com": 1986, "figma.com": 2016,
-        "huggingface.co": 2016, "medium.com": 2012, "quora.com": 2009,
-        "naukri.com": 1997, "indeed.com": 2004,
+        "chatgpt.com": 2022, "gemini.google.com": 2023,
+        "perplexity.ai": 2022, "midjourney.com": 2021,
+        # Finance Global
+        "paypal.com": 1999, "stripe.com": 2010, "coinbase.com": 2012,
+        "binance.com": 2017, "robinhood.com": 2013, "visa.com": 1975,
+        "mastercard.com": 1966, "americanexpress.com": 1850,
+        "westernunion.com": 1851, "chase.com": 1799, "citibank.com": 1812,
+        "bankofamerica.com": 1904, "wellsfargo.com": 1852,
+        # Indian Finance
+        "sbi.co.in": 1955, "hdfcbank.com": 1994, "icicibank.com": 1994,
+        "axisbank.com": 1993, "kotakbank.com": 1985, "yesbank.in": 2004,
+        "pnbindia.in": 1895, "canarabank.com": 1906, "rblbank.com": 1943,
+        "federalbank.co.in": 1931, "indusind.com": 1994,
+        "paytm.com": 2010, "phonepe.com": 2015, "razorpay.com": 2014,
+        "mobikwik.com": 2009, "zerodha.com": 2010, "groww.in": 2016,
+        "upstox.com": 2012, "angelone.in": 1996,
+        "rbi.org.in": 1935, "sebi.gov.in": 1988,
+        # Indian Shopping
+        "flipkart.com": 2007, "myntra.com": 2007, "snapdeal.com": 2010,
+        "meesho.com": 2015, "nykaa.com": 2012, "bigbasket.com": 2011,
+        "blinkit.com": 2013, "zepto.com": 2021, "swiggy.com": 2014,
+        "zomato.com": 2008, "ajio.com": 2016, "indiamart.com": 1999,
+        # Indian Travel
+        "irctc.co.in": 1999, "makemytrip.com": 2000, "goibibo.com": 2009,
+        "cleartrip.com": 2006, "redbus.in": 2006, "ola.com": 2010,
+        # Indian News
+        "ndtv.com": 1997, "timesofindia.com": 1838, "thehindu.com": 1878,
+        "hindustantimes.com": 1924, "indianexpress.com": 1932,
+        "livemint.com": 2007, "moneycontrol.com": 1999,
+        "economictimes.indiatimes.com": 1961, "news18.com": 1999,
+        # Indian Govt
+        "india.gov.in": 2005, "mygov.in": 2014, "uidai.gov.in": 2009,
+        "incometax.gov.in": 2004, "gst.gov.in": 2017,
+        "epfindia.gov.in": 2001, "digilocker.gov.in": 2015,
+        # Shopping Global
+        "ebay.com": 1995, "etsy.com": 2005, "walmart.com": 1996,
+        "target.com": 1999, "bestbuy.com": 1999, "aliexpress.com": 2010,
+        "alibaba.com": 1999, "ikea.com": 1997, "wayfair.com": 2002,
+        # Travel Global
+        "booking.com": 1996, "airbnb.com": 2008, "expedia.com": 1996,
+        "tripadvisor.com": 2000, "hotels.com": 1991, "kayak.com": 2004,
+        "skyscanner.com": 2003, "uber.com": 2009, "lyft.com": 2012,
+        # News Global
+        "bbc.com": 1995, "cnn.com": 1995, "reuters.com": 1851,
+        "nytimes.com": 1851, "theguardian.com": 1821, "forbes.com": 1917,
+        "bloomberg.com": 1990, "wsj.com": 1889, "techcrunch.com": 2005,
+        "theverge.com": 2011, "wired.com": 1993, "arstechnica.com": 1998,
+        # Education
+        "wikipedia.org": 2001, "coursera.org": 2012, "udemy.com": 2010,
+        "edx.org": 2012, "khanacademy.org": 2008, "duolingo.com": 2011,
+        "codecademy.com": 2011, "freecodecamp.org": 2014,
+        "w3schools.com": 1998, "geeksforgeeks.org": 2009,
+        "hackerrank.com": 2009, "leetcode.com": 2011,
+        "britannica.com": 1768, "archive.org": 1996, "nptel.ac.in": 2001,
+        # Health
+        "who.int": 1948, "cdc.gov": 1946, "nih.gov": 1993,
+        "mayoclinic.org": 1998, "webmd.com": 1996, "healthline.com": 2006,
+        "apollohospitals.com": 1983, "practo.com": 2008,
+        "1mg.com": 2012, "pharmeasy.in": 2015,
+        # Security
+        "virustotal.com": 2004, "kaspersky.com": 1997, "norton.com": 1990,
+        "malwarebytes.com": 2004, "crowdstrike.com": 2011,
+        "avg.com": 1991, "bitdefender.com": 2001, "avast.com": 1988,
+        "mcafee.com": 1987, "sophos.com": 1985,
+        # Jobs
+        "naukri.com": 1997, "indeed.com": 2004, "glassdoor.com": 2007,
+        "linkedin.com": 2002, "internshala.com": 2010, "monster.com": 1994,
+        # Other
+        "virustotal.com": 2004, "duckduckgo.com": 2008,
+        "producthunt.com": 2013, "trello.com": 2011, "asana.com": 2008,
+        "hubspot.com": 2006, "salesforce.com": 1999,
+        "mailchimp.com": 2001, "imdb.com": 1990, "goodreads.com": 2007,
+        "trustpilot.com": 2007, "yelp.com": 2004,
     }
+
     current_year = datetime.now().year
+
+    # Exact match
     if d in KNOWN_DOMAINS:
         reg_year  = KNOWN_DOMAINS[d]
         age_years = current_year - reg_year
@@ -423,21 +516,56 @@ def estimate_domain_age(domain: str) -> dict:
             "age_label":      f"~{age_years} years old",
             "trust": "established" if age_years > 5 else "relatively new"
         }
+
+    # ── Smart parent domain lookup ────────────────────────────────────
+    # e.g. in.search.yahoo.com → check search.yahoo.com → yahoo.com
+    parts = d.split(".")
+    for i in range(1, len(parts)):
+        parent = ".".join(parts[i:])
+        if parent in KNOWN_DOMAINS:
+            reg_year  = KNOWN_DOMAINS[parent]
+            age_years = current_year - reg_year
+            return {
+                "estimated_year": reg_year,
+                "age_years":      age_years,
+                "age_label":      f"~{age_years} years old (parent domain)",
+                "trust": "established" if age_years > 5 else "relatively new"
+            }
+
     tld = get_tld(d)
     SUSPICIOUS_TLDS = [".tk",".ml",".ga",".cf",".gq",".xyz",
-                       ".click",".win",".loan",".top",".buzz",".icu"]
+                       ".click",".win",".loan",".top",".buzz",".icu",
+                       ".pw",".cc",".su",".fit",".bid"]
     if tld in SUSPICIOUS_TLDS:
         return {"estimated_year": current_year, "age_years": 0,
                 "age_label": "Likely very new (<1 year)", "trust": "untrustworthy"}
+
+    # ── Estimate by TLD for gov/edu ───────────────────────────────────
+    if tld in [".gov", ".gov.in", ".nic.in"]:
+        return {"estimated_year": 2000, "age_years": current_year - 2000,
+                "age_label": f"~{current_year - 2000} years old (govt estimate)",
+                "trust": "established"}
+    if tld in [".edu", ".ac.in", ".edu.in"]:
+        return {"estimated_year": 2000, "age_years": current_year - 2000,
+                "age_label": f"~{current_year - 2000} years old (edu estimate)",
+                "trust": "established"}
+
     return {"estimated_year": None, "age_years": None,
             "age_label": "Unknown — WHOIS lookup needed", "trust": "unverified"}
 
 
 def get_site_type(url: str, domain: str) -> str:
-    d = domain.replace("www.", "").lower()
+    # Check full domain + all parent domains for better matching
+    full_d = domain.replace("www.", "").lower()
+    parts  = full_d.split(".")
+    all_domains = [full_d] + [".".join(parts[i:]) for i in range(1, len(parts))]
+    d = " ".join(all_domains)  # Search across all levels
+
+    SEARCH     = ["google","yahoo","bing","duckduckgo","baidu","yandex",
+                  "ask.com","ecosia","search","brave.com"]
     SOCIAL     = ["facebook","twitter","instagram","linkedin","tiktok","snapchat",
                   "pinterest","reddit","youtube","telegram","whatsapp","discord",
-                  "twitch","quora","x.com","meta","threads","signal"]
+                  "twitch","quora","meta","threads","signal","tumblr"]
     ECOMMERCE  = ["amazon","ebay","flipkart","shopify","etsy","walmart","meesho",
                   "myntra","ajio","nykaa","snapdeal","bigbasket","blinkit","zepto",
                   "swiggy","zomato","alibaba","aliexpress","shop","store","cart"]
@@ -457,7 +585,7 @@ def get_site_type(url: str, domain: str) -> str:
                   "hindu","express","reuters","bloomberg","forbes","techcrunch",
                   "theverge","wired","hindustantimes","indianexpress","livemint"]
     TECH       = ["github","microsoft","google","apple","amazon","cloud","api",
-                  "dev","software","tech","app","virustotal","security","cyber",
+                  "dev","software","tech","virustotal","security","cyber",
                   "openai","anthropic","claude","huggingface","nvidia","docker",
                   "vercel","netlify","render","wordpress","cloudflare","stackoverflow"]
     STREAM     = ["netflix","hotstar","primevideo","disneyplus","spotify",
@@ -475,6 +603,7 @@ def get_site_type(url: str, domain: str) -> str:
 
     if any(s in d for s in FREE_BUILD):  return "⚠️ Free Website Builder"
     if any(s in d for s in PHISH):       return "🚨 Likely Phishing Page"
+    if any(s in d for s in SEARCH):      return "🔍 Search Engine / Portal"
     if any(s in d for s in SOCIAL):      return "📱 Social Media"
     if any(s in d for s in ECOMMERCE):   return "🛒 Shopping / E-Commerce"
     if any(s in d for s in FINANCE):     return "💰 Finance / Banking"
