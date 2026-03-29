@@ -51,9 +51,12 @@
     .trust-bad { background:#ff3d5a15; color:#ff3d5a; border:1px solid #ff3d5a30; }
     .proto-https { color:var(--green); }
     .proto-http { color:var(--red); }
-    .scan-btn { width:100%; background:linear-gradient(135deg,#00e5ff15,#0066ff15); border:1px solid #00e5ff30; color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; padding:10px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
+    .scan-btn { width:100%; background:linear-gradient(135deg,#00e5ff15,#0066ff15); border:1px solid #00e5ff30; color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:11px; padding:10px; border-radius:8px; cursor:pointer; transition:all 0.2s; margin-bottom:8px; }
     .scan-btn:hover { background:linear-gradient(135deg,#00e5ff25,#0066ff25); }
     .scan-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .export-row { display:flex; gap:7px; margin-bottom:4px; }
+    .export-btn { flex:1; background:#ffffff08; border:1px solid var(--border); color:#6b7d99; font-family:'JetBrains Mono',monospace; font-size:9px; padding:7px; border-radius:7px; cursor:pointer; transition:all 0.2s; letter-spacing:0.5px; }
+    .export-btn:hover { background:#ffffff12; color:var(--text); border-color:#2e3d4d; }
     .loading { text-align:center; padding:30px 0; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px; }
     .spinner { width:28px; height:28px; border:2px solid var(--border); border-top-color:var(--cyan); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -72,9 +75,13 @@
   </div>
   <div class="main">
     <div id="content">
-      <div class="loading"><div class="spinner"></div>Analyzing URL...</div>
+      <div class="loading"><div class="spinner"></div>Analyzing with AI...</div>
     </div>
     <button class="scan-btn" id="scanBtn">⟳ RE-SCAN THIS PAGE</button>
+    <div class="export-row">
+      <button class="export-btn" id="exportCSVBtn">⬇ EXPORT CSV</button>
+      <button class="export-btn" id="exportPDFBtn">⬇ EXPORT PDF</button>
+    </div>
   </div>
   <div class="footer">
     <span>FraudShield v3.0 — AI Fraud Detection</span>
