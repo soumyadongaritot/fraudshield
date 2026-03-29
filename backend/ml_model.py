@@ -6,7 +6,6 @@ from datetime import datetime
 import joblib
 
 # ── MASTER TRUSTED DOMAINS WHITELIST ─────────────────────────────────
-# These domains ALWAYS get high scores regardless of ML/heuristics
 TRUSTED_DOMAINS = {
     # Google
     "google.com","google.co.in","google.co.uk","google.com.au",
@@ -14,41 +13,34 @@ TRUSTED_DOMAINS = {
     "maps.google.com","accounts.google.com","mail.google.com",
     "cloud.google.com","scholar.google.com","play.google.com",
     "search.google.com","in.search.yahoo.com",
-
     # Yahoo
     "yahoo.com","yahoo.co.in","yahoo.co.uk","search.yahoo.com",
     "in.search.yahoo.com","mail.yahoo.com","finance.yahoo.com",
     "news.yahoo.com","sports.yahoo.com",
-
     # Microsoft
     "microsoft.com","office.com","outlook.com","live.com",
     "hotmail.com","bing.com","msn.com","xbox.com",
     "azure.microsoft.com","teams.microsoft.com",
     "onedrive.live.com","account.microsoft.com",
     "login.microsoftonline.com","portal.azure.com",
-
     # Apple
     "apple.com","icloud.com","developer.apple.com",
     "support.apple.com","store.apple.com","appleid.apple.com",
-
     # Amazon
     "amazon.com","amazon.in","amazon.co.uk","amazon.de",
     "aws.amazon.com","prime.amazon.com","payments.amazon.in",
     "sellercentral.amazon.in",
-
     # Meta / Social
     "facebook.com","instagram.com","whatsapp.com","messenger.com",
     "meta.com","twitter.com","x.com","linkedin.com","reddit.com",
     "pinterest.com","tumblr.com","snapchat.com","tiktok.com",
     "discord.com","twitch.tv","telegram.org","signal.org",
     "threads.net","quora.com",
-
     # Entertainment
     "netflix.com","spotify.com","hulu.com","disneyplus.com",
     "primevideo.com","hotstar.com","sonyliv.com","zee5.com",
     "jiosaavn.com","gaana.com","wynk.in","soundcloud.com",
     "pandora.com","deezer.com","tidal.com","vimeo.com",
-
     # Tech / Dev
     "github.com","gitlab.com","bitbucket.org","stackoverflow.com",
     "cloudflare.com","digitalocean.com","heroku.com","vercel.com",
@@ -56,12 +48,10 @@ TRUSTED_DOMAINS = {
     "notion.so","figma.com","canva.com","slack.com","zoom.us",
     "dropbox.com","box.com","adobe.com","shopify.com","wordpress.com",
     "npmjs.com","pypi.org","docker.com","kubernetes.io",
-
     # AI
     "claude.ai","anthropic.com","openai.com","chat.openai.com",
     "chatgpt.com","huggingface.co","midjourney.com","perplexity.ai",
     "gemini.google.com","copilot.microsoft.com","stability.ai",
-
     # Finance Global
     "paypal.com","stripe.com","chase.com","bankofamerica.com",
     "wellsfargo.com","citibank.com","capitalone.com","discover.com",
@@ -69,7 +59,6 @@ TRUSTED_DOMAINS = {
     "schwab.com","vanguard.com","robinhood.com","coinbase.com",
     "binance.com","kraken.com","venmo.com","cashapp.com","zelle.com",
     "visa.com","mastercard.com","westernunion.com",
-
     # Indian Finance
     "sbi.co.in","onlinesbi.sbi.co.in","hdfcbank.com",
     "netbanking.hdfcbank.com","icicibank.com","axisbank.com",
@@ -79,76 +68,63 @@ TRUSTED_DOMAINS = {
     "zerodha.com","groww.in","upstox.com","angelone.in",
     "policybazaar.com","coverfox.com","acko.com",
     "rbi.org.in","sebi.gov.in","nse.com","bseindia.com",
-
     # Indian Shopping
     "flipkart.com","myntra.com","snapdeal.com","meesho.com",
     "nykaa.com","bigbasket.com","grofers.com","blinkit.com",
     "swiggy.com","zomato.com","dunzo.com","zepto.com",
     "indiamart.com","tradeindia.com","justdial.com","ajio.com",
-
     # Indian Travel
     "irctc.co.in","makemytrip.com","goibibo.com","yatra.com",
     "cleartrip.com","redbus.in","rapido.bike","ola.com",
-
     # Indian News
     "ndtv.com","timesofindia.com","thehindu.com","hindustantimes.com",
     "indianexpress.com","livemint.com","businessstandard.com",
     "economictimes.indiatimes.com","news18.com","moneycontrol.com",
     "indiatimes.com","aajtak.in","abplive.com","zeenews.india.com",
-
     # Indian Govt
     "india.gov.in","mygov.in","uidai.gov.in","incometax.gov.in",
     "gst.gov.in","epfindia.gov.in","digilocker.gov.in","mca.gov.in",
     "nic.in","nptel.ac.in","irda.gov.in","trai.gov.in",
-
     # Shopping Global
     "ebay.com","etsy.com","walmart.com","target.com","bestbuy.com",
     "costco.com","ikea.com","wayfair.com","aliexpress.com","alibaba.com",
-
     # Travel Global
     "booking.com","airbnb.com","expedia.com","tripadvisor.com",
     "hotels.com","kayak.com","skyscanner.com","uber.com","lyft.com",
     "agoda.com","airasia.com","emirates.com","singaporeair.com",
-
     # News Global
     "nytimes.com","bbc.com","bbc.co.uk","cnn.com","reuters.com",
     "theguardian.com","forbes.com","bloomberg.com","wsj.com",
     "washingtonpost.com","techcrunch.com","wired.com",
     "theverge.com","arstechnica.com","apnews.com",
-
     # Education
     "wikipedia.org","coursera.org","udemy.com","edx.org",
     "khanacademy.org","duolingo.com","codecademy.com",
     "freecodecamp.org","w3schools.com","geeksforgeeks.org",
     "hackerrank.com","leetcode.com","harvard.edu","mit.edu",
     "stanford.edu","britannica.com","archive.org","medium.com",
-
     # Health
     "who.int","cdc.gov","nih.gov","mayoclinic.org","webmd.com",
     "healthline.com","apollohospitals.com","practo.com",
     "1mg.com","pharmeasy.in","netmeds.com",
-
     # Security
     "virustotal.com","kaspersky.com","norton.com","malwarebytes.com",
     "crowdstrike.com","avg.com","bitdefender.com","avast.com",
     "mcafee.com","sophos.com","trendmicro.com",
-
     # Other
     "duckduckgo.com","ecosia.org","wolframalpha.com","internshala.com",
     "naukri.com","indeed.com","glassdoor.com","monster.com",
-    "booking.com","yelp.com","trustpilot.com","imdb.com",
-    "goodreads.com","producthunt.com","trello.com","asana.com",
-    "hubspot.com","salesforce.com","mailchimp.com","sendinblue.com",
+    "yelp.com","trustpilot.com","imdb.com","goodreads.com",
+    "producthunt.com","trello.com","asana.com","hubspot.com",
+    "salesforce.com","mailchimp.com","sendinblue.com",
+    "uptimerobot.com","dashboard.uptimerobot.com",
 }
 
 
 def is_trusted_domain(domain: str) -> bool:
-    """Check if domain or any parent domain is trusted."""
     domain = domain.lower().replace("www.", "")
-    # Exact match
     if domain in TRUSTED_DOMAINS:
         return True
-    # Check if it's a subdomain of a trusted domain
     parts = domain.split(".")
     for i in range(1, len(parts)):
         parent = ".".join(parts[i:])
@@ -200,11 +176,9 @@ def extract_features(url: str) -> dict:
             "invoice","payment","refund","cancel","suspend","restore",
             "recover","helpdesk","support","service","customer","security"
         ]
-        # Only count keywords in domain/path, NOT query params for trusted domains
         domain_clean = domain.replace("www.", "")
         trusted = is_trusted_domain(domain_clean)
         if trusted:
-            # For trusted domains, only check domain itself for keywords
             features["suspicious_keywords"] = sum(
                 1 for kw in PHISH_KEYWORDS if kw in domain_clean)
         else:
@@ -215,8 +189,7 @@ def extract_features(url: str) -> dict:
             "bit.ly","tinyurl","goo.gl","t.co","ow.ly","short.link",
             "rb.gy","cutt.ly","is.gd","buff.ly","ift.tt","dlvr.it",
         ]
-        features["is_shortener"] = 1 if any(
-            s in domain for s in SHORTENERS) else 0
+        features["is_shortener"] = 1 if any(s in domain for s in SHORTENERS) else 0
 
         FREE_HOSTS = [
             "godaddysites.com","wixsite.com","weebly.com","webflow.io",
@@ -224,8 +197,7 @@ def extract_features(url: str) -> dict:
             "replit.dev","carrd.co","strikingly.com","jimdo.com",
             "yolasite.com","angelfire.com","tripod.com",
         ]
-        features["is_free_host"] = 1 if any(
-            h in domain for h in FREE_HOSTS) else 0
+        features["is_free_host"] = 1 if any(h in domain for h in FREE_HOSTS) else 0
 
         SUSPICIOUS_TLDS = [
             ".tk",".ml",".ga",".cf",".gq",".xyz",".click",
@@ -246,11 +218,8 @@ def extract_features(url: str) -> dict:
             "sbi","hdfc","icici","axis","paytm","phonepe",
             "flipkart","myntra","swiggy","zomato","zerodha","groww"
         ]
-
-        # Brand impersonation: only flag if NOT a trusted domain
         brand_in_domain = any(b in domain_clean for b in BRANDS)
-        features["brand_impersonation"] = 1 if (
-            brand_in_domain and not trusted) else 0
+        features["brand_impersonation"] = 1 if (brand_in_domain and not trusted) else 0
 
         domain_alpha = domain_clean.split(".")[0]
         if domain_alpha:
@@ -261,8 +230,6 @@ def extract_features(url: str) -> dict:
 
         features["special_chars"] = sum(
             1 for c in domain if not c.isalnum() and c not in ".-")
-
-        # Trusted domain feature — key for accuracy
         features["is_trusted_domain"] = 1 if trusted else 0
 
         return features
@@ -288,39 +255,53 @@ def calculate_entropy(text: str) -> float:
 
 
 def heuristic_score(features: dict, is_trusted: bool) -> int:
-    # Trusted domains always start at 95
+    # Trusted domains always get high score
     if is_trusted:
         score = 95
-        # Minor deductions only for truly dangerous signals
-        if features.get("has_ip"):    score -= 40
-        if features.get("has_at"):    score -= 30
+        if features.get("has_ip"):       score -= 40
+        if features.get("has_at"):       score -= 30
         if features.get("has_punycode"): score -= 10
         return max(60, min(100, score))
 
-    # Unknown domains — full scoring
+    # Unknown domains — full strict scoring
     score = 100
-    if features.get("has_ip"):               score -= 40
-    if features.get("has_at"):               score -= 30
-    if features.get("brand_impersonation"):  score -= 35
-    if features.get("suspicious_tld"):       score -= 25
-    if features.get("has_punycode"):         score -= 20
-    if not features.get("has_https"):        score -= 20
-    if features.get("has_double_slash"):     score -= 15
-    if features.get("has_redirect"):         score -= 10
-    if features.get("has_port"):             score -= 10
-    if features.get("is_shortener"):         score -= 15
-    if features.get("is_free_host"):         score -= 20
+
+    # ── Critical signals (very strong deductions) ──────────────────
+    if features.get("has_ip"):               score -= 50
+    if features.get("has_at"):               score -= 40
+    if features.get("brand_impersonation"):  score -= 45
+    if features.get("suspicious_tld"):       score -= 40  # was 25 → now 40
+    if features.get("has_punycode"):         score -= 30
+
+    # ── High signals ───────────────────────────────────────────────
+    if not features.get("has_https"):        score -= 30  # was 20 → now 30
+    if features.get("is_free_host"):         score -= 30  # was 20 → now 30
+    if features.get("is_shortener"):         score -= 20
+    if features.get("has_double_slash"):     score -= 20
+    if features.get("has_redirect"):         score -= 15
+    if features.get("has_port"):             score -= 15
+
+    # ── Keyword penalty ─────────────────────────────────────────────
     kw = features.get("suspicious_keywords", 0)
-    score -= min(kw * 10, 40)
+    score -= min(kw * 12, 48)  # was 10 per kw → now 12, max 48
+
+    # ── Subdomain penalty ───────────────────────────────────────────
     if features.get("num_subdomains", 0) > 2:
-        score -= 10 * (features["num_subdomains"] - 2)
-    if features.get("url_length", 0) > 75:       score -= 5
-    if features.get("url_length", 0) > 100:      score -= 10
-    if features.get("url_length", 0) > 150:      score -= 15
-    if features.get("domain_entropy", 0) > 3.5:  score -= 10
-    if features.get("domain_entropy", 0) > 4:    score -= 15
-    if features.get("digit_ratio", 0) > 0.4:     score -= 10
-    if features.get("special_chars", 0) > 0:     score -= 10
+        score -= 15 * (features["num_subdomains"] - 2)
+
+    # ── URL length penalty ──────────────────────────────────────────
+    if features.get("url_length", 0) > 75:   score -= 5
+    if features.get("url_length", 0) > 100:  score -= 10
+    if features.get("url_length", 0) > 150:  score -= 15
+
+    # ── Entropy penalty ─────────────────────────────────────────────
+    if features.get("domain_entropy", 0) > 3.5: score -= 10
+    if features.get("domain_entropy", 0) > 4.0: score -= 15
+
+    # ── Other signals ───────────────────────────────────────────────
+    if features.get("digit_ratio", 0) > 0.4:    score -= 15
+    if features.get("special_chars", 0) > 0:    score -= 10
+
     return max(0, min(100, score))
 
 
@@ -389,35 +370,28 @@ def estimate_domain_age(domain: str) -> dict:
     d = domain.replace("www.", "").lower()
 
     KNOWN_DOMAINS = {
-        # Search / Portal
         "google.com": 1997, "google.co.in": 1997, "google.co.uk": 1997,
         "youtube.com": 2005, "gmail.com": 2004, "yahoo.com": 1995,
         "bing.com": 2009, "duckduckgo.com": 2008, "ask.com": 1996,
         "baidu.com": 2000, "yandex.com": 1997,
-        # Microsoft
         "microsoft.com": 1991, "office.com": 2000, "outlook.com": 1997,
         "live.com": 2005, "hotmail.com": 1996, "msn.com": 1995,
         "azure.microsoft.com": 2010, "xbox.com": 2000, "skype.com": 2003,
-        # Apple
         "apple.com": 1987, "icloud.com": 2012, "itunes.com": 1999,
-        # Amazon
         "amazon.com": 1994, "amazon.in": 2004, "amazon.co.uk": 1998,
         "aws.amazon.com": 2006,
-        # Social
         "facebook.com": 2004, "instagram.com": 2010, "whatsapp.com": 2009,
         "twitter.com": 2006, "x.com": 1996, "linkedin.com": 2002,
         "reddit.com": 2005, "pinterest.com": 2010, "snapchat.com": 2011,
         "tiktok.com": 2016, "discord.com": 2015, "telegram.org": 2013,
         "signal.org": 2014, "twitch.tv": 2011, "quora.com": 2009,
         "tumblr.com": 2007, "threads.net": 2023, "meta.com": 2021,
-        # Entertainment
         "netflix.com": 1997, "spotify.com": 2006, "hulu.com": 2007,
         "disneyplus.com": 2019, "primevideo.com": 2016, "hotstar.com": 2015,
         "sonyliv.com": 2013, "zee5.com": 2018, "jiosaavn.com": 2007,
         "gaana.com": 2010, "wynk.in": 2014, "soundcloud.com": 2007,
         "pandora.com": 2000, "deezer.com": 2007, "tidal.com": 2014,
-        "vimeo.com": 2004, "youtube.com": 2005,
-        # Tech / Dev
+        "vimeo.com": 2004,
         "github.com": 2007, "gitlab.com": 2011, "bitbucket.org": 2008,
         "stackoverflow.com": 2008, "cloudflare.com": 2009,
         "digitalocean.com": 2011, "heroku.com": 2007, "vercel.com": 2015,
@@ -427,17 +401,14 @@ def estimate_domain_age(domain: str) -> dict:
         "adobe.com": 1986, "shopify.com": 2006, "wordpress.com": 2005,
         "npmjs.com": 2010, "pypi.org": 2003, "docker.com": 2013,
         "huggingface.co": 2016, "medium.com": 2012,
-        # AI
         "openai.com": 2015, "claude.ai": 2022, "anthropic.com": 2021,
         "chatgpt.com": 2022, "gemini.google.com": 2023,
         "perplexity.ai": 2022, "midjourney.com": 2021,
-        # Finance Global
         "paypal.com": 1999, "stripe.com": 2010, "coinbase.com": 2012,
         "binance.com": 2017, "robinhood.com": 2013, "visa.com": 1975,
         "mastercard.com": 1966, "americanexpress.com": 1850,
         "westernunion.com": 1851, "chase.com": 1799, "citibank.com": 1812,
         "bankofamerica.com": 1904, "wellsfargo.com": 1852,
-        # Indian Finance
         "sbi.co.in": 1955, "hdfcbank.com": 1994, "icicibank.com": 1994,
         "axisbank.com": 1993, "kotakbank.com": 1985, "yesbank.in": 2004,
         "pnbindia.in": 1895, "canarabank.com": 1906, "rblbank.com": 1943,
@@ -446,67 +417,54 @@ def estimate_domain_age(domain: str) -> dict:
         "mobikwik.com": 2009, "zerodha.com": 2010, "groww.in": 2016,
         "upstox.com": 2012, "angelone.in": 1996,
         "rbi.org.in": 1935, "sebi.gov.in": 1988,
-        # Indian Shopping
         "flipkart.com": 2007, "myntra.com": 2007, "snapdeal.com": 2010,
         "meesho.com": 2015, "nykaa.com": 2012, "bigbasket.com": 2011,
         "blinkit.com": 2013, "zepto.com": 2021, "swiggy.com": 2014,
         "zomato.com": 2008, "ajio.com": 2016, "indiamart.com": 1999,
-        # Indian Travel
         "irctc.co.in": 1999, "makemytrip.com": 2000, "goibibo.com": 2009,
         "cleartrip.com": 2006, "redbus.in": 2006, "ola.com": 2010,
-        # Indian News
         "ndtv.com": 1997, "timesofindia.com": 1838, "thehindu.com": 1878,
         "hindustantimes.com": 1924, "indianexpress.com": 1932,
         "livemint.com": 2007, "moneycontrol.com": 1999,
         "economictimes.indiatimes.com": 1961, "news18.com": 1999,
-        # Indian Govt
         "india.gov.in": 2005, "mygov.in": 2014, "uidai.gov.in": 2009,
         "incometax.gov.in": 2004, "gst.gov.in": 2017,
         "epfindia.gov.in": 2001, "digilocker.gov.in": 2015,
-        # Shopping Global
         "ebay.com": 1995, "etsy.com": 2005, "walmart.com": 1996,
         "target.com": 1999, "bestbuy.com": 1999, "aliexpress.com": 2010,
         "alibaba.com": 1999, "ikea.com": 1997, "wayfair.com": 2002,
-        # Travel Global
         "booking.com": 1996, "airbnb.com": 2008, "expedia.com": 1996,
         "tripadvisor.com": 2000, "hotels.com": 1991, "kayak.com": 2004,
         "skyscanner.com": 2003, "uber.com": 2009, "lyft.com": 2012,
-        # News Global
         "bbc.com": 1995, "cnn.com": 1995, "reuters.com": 1851,
         "nytimes.com": 1851, "theguardian.com": 1821, "forbes.com": 1917,
         "bloomberg.com": 1990, "wsj.com": 1889, "techcrunch.com": 2005,
         "theverge.com": 2011, "wired.com": 1993, "arstechnica.com": 1998,
-        # Education
         "wikipedia.org": 2001, "coursera.org": 2012, "udemy.com": 2010,
         "edx.org": 2012, "khanacademy.org": 2008, "duolingo.com": 2011,
         "codecademy.com": 2011, "freecodecamp.org": 2014,
         "w3schools.com": 1998, "geeksforgeeks.org": 2009,
         "hackerrank.com": 2009, "leetcode.com": 2011,
         "britannica.com": 1768, "archive.org": 1996, "nptel.ac.in": 2001,
-        # Health
         "who.int": 1948, "cdc.gov": 1946, "nih.gov": 1993,
         "mayoclinic.org": 1998, "webmd.com": 1996, "healthline.com": 2006,
         "apollohospitals.com": 1983, "practo.com": 2008,
         "1mg.com": 2012, "pharmeasy.in": 2015,
-        # Security
         "virustotal.com": 2004, "kaspersky.com": 1997, "norton.com": 1990,
         "malwarebytes.com": 2004, "crowdstrike.com": 2011,
         "avg.com": 1991, "bitdefender.com": 2001, "avast.com": 1988,
         "mcafee.com": 1987, "sophos.com": 1985,
-        # Jobs
         "naukri.com": 1997, "indeed.com": 2004, "glassdoor.com": 2007,
-        "linkedin.com": 2002, "internshala.com": 2010, "monster.com": 1994,
-        # Other
-        "virustotal.com": 2004, "duckduckgo.com": 2008,
+        "internshala.com": 2010, "monster.com": 1994,
         "producthunt.com": 2013, "trello.com": 2011, "asana.com": 2008,
         "hubspot.com": 2006, "salesforce.com": 1999,
         "mailchimp.com": 2001, "imdb.com": 1990, "goodreads.com": 2007,
         "trustpilot.com": 2007, "yelp.com": 2004,
+        "uptimerobot.com": 2010,
     }
 
     current_year = datetime.now().year
 
-    # Exact match
     if d in KNOWN_DOMAINS:
         reg_year  = KNOWN_DOMAINS[d]
         age_years = current_year - reg_year
@@ -517,8 +475,7 @@ def estimate_domain_age(domain: str) -> dict:
             "trust": "established" if age_years > 5 else "relatively new"
         }
 
-    # ── Smart parent domain lookup ────────────────────────────────────
-    # e.g. in.search.yahoo.com → check search.yahoo.com → yahoo.com
+    # Smart parent domain lookup
     parts = d.split(".")
     for i in range(1, len(parts)):
         parent = ".".join(parts[i:])
@@ -540,7 +497,6 @@ def estimate_domain_age(domain: str) -> dict:
         return {"estimated_year": current_year, "age_years": 0,
                 "age_label": "Likely very new (<1 year)", "trust": "untrustworthy"}
 
-    # ── Estimate by TLD for gov/edu ───────────────────────────────────
     if tld in [".gov", ".gov.in", ".nic.in"]:
         return {"estimated_year": 2000, "age_years": current_year - 2000,
                 "age_label": f"~{current_year - 2000} years old (govt estimate)",
@@ -555,14 +511,12 @@ def estimate_domain_age(domain: str) -> dict:
 
 
 def get_site_type(url: str, domain: str) -> str:
-    # Check full domain + all parent domains for better matching
     full_d = domain.replace("www.", "").lower()
     parts  = full_d.split(".")
     all_domains = [full_d] + [".".join(parts[i:]) for i in range(1, len(parts))]
-    d = " ".join(all_domains)  # Search across all levels
+    d = " ".join(all_domains)
 
-    SEARCH     = ["google","yahoo","bing","duckduckgo","baidu","yandex",
-                  "ask.com","ecosia","search","brave.com"]
+    SEARCH     = ["google","yahoo","bing","duckduckgo","baidu","yandex","ecosia","search"]
     SOCIAL     = ["facebook","twitter","instagram","linkedin","tiktok","snapchat",
                   "pinterest","reddit","youtube","telegram","whatsapp","discord",
                   "twitch","quora","meta","threads","signal","tumblr"]
@@ -587,7 +541,8 @@ def get_site_type(url: str, domain: str) -> str:
     TECH       = ["github","microsoft","google","apple","amazon","cloud","api",
                   "dev","software","tech","virustotal","security","cyber",
                   "openai","anthropic","claude","huggingface","nvidia","docker",
-                  "vercel","netlify","render","wordpress","cloudflare","stackoverflow"]
+                  "vercel","netlify","render","wordpress","cloudflare","stackoverflow",
+                  "uptimerobot"]
     STREAM     = ["netflix","hotstar","primevideo","disneyplus","spotify",
                   "sonyliv","zee5","gaana","jiosaavn","soundcloud","hulu","music",
                   "video","stream","movie","series","podcast"]
@@ -677,15 +632,12 @@ def predict_url(url: str) -> dict:
     domain  = parsed.netloc.lower().replace("www.", "")
     trusted = is_trusted_domain(domain)
 
-    # ── TRUSTED DOMAIN OVERRIDE ───────────────────────────────────────
-    # Known safe domains always get at least 88 score
+    # ── TRUSTED DOMAIN FAST PATH ──────────────────────────────────────
     if trusted:
         base_score = 92
-        # Small deductions only for truly dangerous signals
-        if features.get("has_ip"):    base_score -= 40
-        if features.get("has_at"):    base_score -= 30
+        if features.get("has_ip"): base_score -= 40
+        if features.get("has_at"): base_score -= 30
         final_score = max(75, min(100, base_score))
-
         return {
             "url":          url,
             "safety_score": final_score,
@@ -696,7 +648,7 @@ def predict_url(url: str) -> dict:
             "domain_info":  domain_info
         }
 
-    # ── ML MODEL PREDICTION for unknown domains ───────────────────────
+    # ── ML MODEL for unknown domains ──────────────────────────────────
     ml_score = None
     if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
         try:
@@ -719,15 +671,23 @@ def predict_url(url: str) -> dict:
     h_score = heuristic_score(features, trusted)
 
     if ml_score is not None:
-        final_score = int(ml_score * 0.6 + h_score * 0.4)
+        final_score = int(ml_score * 0.5 + h_score * 0.5)
     else:
         final_score = h_score
 
-    # Hard caps for dangerous signals
-    if features.get("brand_impersonation"): final_score = min(final_score, 30)
-    if features.get("has_ip"):              final_score = min(final_score, 25)
+    # ── Hard caps — these ALWAYS override everything ──────────────────
+    if features.get("has_ip"):
+        final_score = min(final_score, 20)
+    if features.get("brand_impersonation"):
+        final_score = min(final_score, 25)
     if features.get("suspicious_tld") and not features.get("has_https"):
-        final_score = min(final_score, 35)
+        final_score = min(final_score, 30)   # .tk + no HTTPS = max 30
+    if features.get("suspicious_tld"):
+        final_score = min(final_score, 44)   # any .tk = max 44 (Suspicious)
+    if features.get("suspicious_tld") and features.get("suspicious_keywords", 0) > 0:
+        final_score = min(final_score, 20)   # .tk + phishing keywords = max 20
+    if features.get("has_at") and features.get("suspicious_tld"):
+        final_score = min(final_score, 15)
 
     return {
         "url":          url,
