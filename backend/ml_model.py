@@ -174,7 +174,9 @@ def extract_features(url: str) -> dict:
             "limited","expire","blocked","locked","unusual","activity",
             "validate","authenticate","authorize","credential","billing",
             "invoice","payment","refund","cancel","suspend","restore",
-            "recover","helpdesk","support","service","customer","security"
+            "recover","helpdesk","support","service","customer","security",
+            # ── NEW: added "phishing" and "test" as signals ──
+            "phishing","scam","hack","malware","fraud","fake","spoof"
         ]
         domain_clean = domain.replace("www.", "")
         trusted = is_trusted_domain(domain_clean)
@@ -266,43 +268,79 @@ def heuristic_score(features: dict, is_trusted: bool) -> int:
     # Unknown domains — full strict scoring
     score = 100
 
-    # ── Critical signals (very strong deductions) ──────────────────
+    # ── Critical signals ───────────────────────────────────────────
     if features.get("has_ip"):               score -= 50
     if features.get("has_at"):               score -= 40
     if features.get("brand_impersonation"):  score -= 45
-    if features.get("suspicious_tld"):       score -= 40  # was 25 → now 40
+    if features.get("suspicious_tld"):       score -= 40
     if features.get("has_punycode"):         score -= 30
 
     # ── High signals ───────────────────────────────────────────────
-    if not features.get("has_https"):        score -= 30  # was 20 → now 30
-    if features.get("is_free_host"):         score -= 30  # was 20 → now 30
+    if not features.get("has_https"):        score -= 30
+    if features.get("is_free_host"):         score -= 30
     if features.get("is_shortener"):         score -= 20
     if features.get("has_double_slash"):     score -= 20
     if features.get("has_redirect"):         score -= 15
     if features.get("has_port"):             score -= 15
 
-    # ── Keyword penalty ─────────────────────────────────────────────
+    # ── Keyword penalty ────────────────────────────────────────────
     kw = features.get("suspicious_keywords", 0)
-    score -= min(kw * 12, 48)  # was 10 per kw → now 12, max 48
+    score -= min(kw * 15, 60)  # 15 per keyword, max 60
 
-    # ── Subdomain penalty ───────────────────────────────────────────
+    # ── Subdomain penalty ──────────────────────────────────────────
     if features.get("num_subdomains", 0) > 2:
         score -= 15 * (features["num_subdomains"] - 2)
 
-    # ── URL length penalty ──────────────────────────────────────────
+    # ── URL length penalty ─────────────────────────────────────────
     if features.get("url_length", 0) > 75:   score -= 5
     if features.get("url_length", 0) > 100:  score -= 10
     if features.get("url_length", 0) > 150:  score -= 15
 
-    # ── Entropy penalty ─────────────────────────────────────────────
+    # ── Entropy penalty ────────────────────────────────────────────
     if features.get("domain_entropy", 0) > 3.5: score -= 10
     if features.get("domain_entropy", 0) > 4.0: score -= 15
 
-    # ── Other signals ───────────────────────────────────────────────
+    # ── Other signals ──────────────────────────────────────────────
     if features.get("digit_ratio", 0) > 0.4:    score -= 15
     if features.get("special_chars", 0) > 0:    score -= 10
 
     return max(0, min(100, score))
+
+
+def apply_hard_caps(final_score: int, features: dict) -> int:
+    """
+    Hard caps applied AFTER ML+heuristic blend.
+    These ALWAYS override the blended score.
+    Order matters — most severe caps first.
+    """
+    kw = features.get("suspicious_keywords", 0)
+    sus_tld  = features.get("suspicious_tld", 0)
+    no_https = not features.get("has_https", 0)
+    has_ip   = features.get("has_ip", 0)
+    brand    = features.get("brand_impersonation", 0)
+    has_at   = features.get("has_at", 0)
+
+    # Absolute worst combos
+    if has_at and sus_tld:
+        final_score = min(final_score, 10)
+    if has_ip and sus_tld:
+        final_score = min(final_score, 10)
+    if sus_tld and kw >= 2:
+        final_score = min(final_score, 15)  # .tk + 2+ phishing keywords = Malicious
+    if sus_tld and kw >= 1:
+        final_score = min(final_score, 25)  # .tk + any phishing keyword = Likely Phishing
+    if sus_tld and no_https:
+        final_score = min(final_score, 30)  # .tk + no HTTPS = max 30
+    if sus_tld:
+        final_score = min(final_score, 44)  # any suspicious TLD = max 44 (Suspicious)
+
+    # Other hard caps
+    if has_ip:
+        final_score = min(final_score, 20)
+    if brand:
+        final_score = min(final_score, 25)
+
+    return max(0, final_score)
 
 
 def get_flags(features: dict, is_trusted: bool) -> list:
@@ -475,7 +513,6 @@ def estimate_domain_age(domain: str) -> dict:
             "trust": "established" if age_years > 5 else "relatively new"
         }
 
-    # Smart parent domain lookup
     parts = d.split(".")
     for i in range(1, len(parts)):
         parent = ".".join(parts[i:])
@@ -554,7 +591,8 @@ def get_site_type(url: str, domain: str) -> str:
                   "000webhostapp","glitch.me","replit","carrd","strikingly","jimdo"]
     PHISH      = ["verify-account","secure-login","account-update",
                   "confirm-identity","suspended-account","prize-claim",
-                  "free-reward","urgent-action","limited-time-offer"]
+                  "free-reward","urgent-action","limited-time-offer",
+                  "phishing","test-phishing","scam","fraud","fake","spoof"]
 
     if any(s in d for s in FREE_BUILD):  return "⚠️ Free Website Builder"
     if any(s in d for s in PHISH):       return "🚨 Likely Phishing Page"
@@ -671,23 +709,23 @@ def predict_url(url: str) -> dict:
     h_score = heuristic_score(features, trusted)
 
     if ml_score is not None:
-        final_score = int(ml_score * 0.5 + h_score * 0.5)
+        # ── Weight heuristic MORE heavily when strong signals present ──
+        sus_tld = features.get("suspicious_tld", 0)
+        kw      = features.get("suspicious_keywords", 0)
+        no_https = not features.get("has_https", 0)
+
+        if sus_tld or (kw >= 2) or (kw >= 1 and no_https):
+            # Strong signals — trust heuristic 80%, ML only 20%
+            blended = int(ml_score * 0.2 + h_score * 0.8)
+        else:
+            # Normal case — equal weight
+            blended = int(ml_score * 0.5 + h_score * 0.5)
+        final_score = blended
     else:
         final_score = h_score
 
-    # ── Hard caps — these ALWAYS override everything ──────────────────
-    if features.get("has_ip"):
-        final_score = min(final_score, 20)
-    if features.get("brand_impersonation"):
-        final_score = min(final_score, 25)
-    if features.get("suspicious_tld") and not features.get("has_https"):
-        final_score = min(final_score, 30)   # .tk + no HTTPS = max 30
-    if features.get("suspicious_tld"):
-        final_score = min(final_score, 44)   # any .tk = max 44 (Suspicious)
-    if features.get("suspicious_tld") and features.get("suspicious_keywords", 0) > 0:
-        final_score = min(final_score, 20)   # .tk + phishing keywords = max 20
-    if features.get("has_at") and features.get("suspicious_tld"):
-        final_score = min(final_score, 15)
+    # ── Apply hard caps last ──────────────────────────────────────────
+    final_score = apply_hard_caps(final_score, features)
 
     return {
         "url":          url,
