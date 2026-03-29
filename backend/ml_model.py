@@ -1,19 +1,169 @@
 import re
 import math
-import string
-from urllib.parse import urlparse, parse_qs
-import joblib
 import os
+from urllib.parse import urlparse, parse_qs
 from datetime import datetime
+import joblib
+
+# ── MASTER TRUSTED DOMAINS WHITELIST ─────────────────────────────────
+# These domains ALWAYS get high scores regardless of ML/heuristics
+TRUSTED_DOMAINS = {
+    # Google
+    "google.com","google.co.in","google.co.uk","google.com.au",
+    "gmail.com","youtube.com","drive.google.com","docs.google.com",
+    "maps.google.com","accounts.google.com","mail.google.com",
+    "cloud.google.com","scholar.google.com","play.google.com",
+    "search.google.com","in.search.yahoo.com",
+
+    # Yahoo
+    "yahoo.com","yahoo.co.in","yahoo.co.uk","search.yahoo.com",
+    "in.search.yahoo.com","mail.yahoo.com","finance.yahoo.com",
+    "news.yahoo.com","sports.yahoo.com",
+
+    # Microsoft
+    "microsoft.com","office.com","outlook.com","live.com",
+    "hotmail.com","bing.com","msn.com","xbox.com",
+    "azure.microsoft.com","teams.microsoft.com",
+    "onedrive.live.com","account.microsoft.com",
+    "login.microsoftonline.com","portal.azure.com",
+
+    # Apple
+    "apple.com","icloud.com","developer.apple.com",
+    "support.apple.com","store.apple.com","appleid.apple.com",
+
+    # Amazon
+    "amazon.com","amazon.in","amazon.co.uk","amazon.de",
+    "aws.amazon.com","prime.amazon.com","payments.amazon.in",
+    "sellercentral.amazon.in",
+
+    # Meta / Social
+    "facebook.com","instagram.com","whatsapp.com","messenger.com",
+    "meta.com","twitter.com","x.com","linkedin.com","reddit.com",
+    "pinterest.com","tumblr.com","snapchat.com","tiktok.com",
+    "discord.com","twitch.tv","telegram.org","signal.org",
+    "threads.net","quora.com",
+
+    # Entertainment
+    "netflix.com","spotify.com","hulu.com","disneyplus.com",
+    "primevideo.com","hotstar.com","sonyliv.com","zee5.com",
+    "jiosaavn.com","gaana.com","wynk.in","soundcloud.com",
+    "pandora.com","deezer.com","tidal.com","vimeo.com",
+
+    # Tech / Dev
+    "github.com","gitlab.com","bitbucket.org","stackoverflow.com",
+    "cloudflare.com","digitalocean.com","heroku.com","vercel.com",
+    "netlify.com","render.com","railway.app","supabase.com",
+    "notion.so","figma.com","canva.com","slack.com","zoom.us",
+    "dropbox.com","box.com","adobe.com","shopify.com","wordpress.com",
+    "npmjs.com","pypi.org","docker.com","kubernetes.io",
+
+    # AI
+    "claude.ai","anthropic.com","openai.com","chat.openai.com",
+    "chatgpt.com","huggingface.co","midjourney.com","perplexity.ai",
+    "gemini.google.com","copilot.microsoft.com","stability.ai",
+
+    # Finance Global
+    "paypal.com","stripe.com","chase.com","bankofamerica.com",
+    "wellsfargo.com","citibank.com","capitalone.com","discover.com",
+    "americanexpress.com","goldmansachs.com","fidelity.com",
+    "schwab.com","vanguard.com","robinhood.com","coinbase.com",
+    "binance.com","kraken.com","venmo.com","cashapp.com","zelle.com",
+    "visa.com","mastercard.com","westernunion.com",
+
+    # Indian Finance
+    "sbi.co.in","onlinesbi.sbi.co.in","hdfcbank.com",
+    "netbanking.hdfcbank.com","icicibank.com","axisbank.com",
+    "kotakbank.com","yesbank.in","pnbindia.in","canarabank.com",
+    "federalbank.co.in","rblbank.com","indusind.com","idfcfirstbank.com",
+    "paytm.com","phonepe.com","razorpay.com","mobikwik.com",
+    "zerodha.com","groww.in","upstox.com","angelone.in",
+    "policybazaar.com","coverfox.com","acko.com",
+    "rbi.org.in","sebi.gov.in","nse.com","bseindia.com",
+
+    # Indian Shopping
+    "flipkart.com","myntra.com","snapdeal.com","meesho.com",
+    "nykaa.com","bigbasket.com","grofers.com","blinkit.com",
+    "swiggy.com","zomato.com","dunzo.com","zepto.com",
+    "indiamart.com","tradeindia.com","justdial.com","ajio.com",
+
+    # Indian Travel
+    "irctc.co.in","makemytrip.com","goibibo.com","yatra.com",
+    "cleartrip.com","redbus.in","rapido.bike","ola.com",
+
+    # Indian News
+    "ndtv.com","timesofindia.com","thehindu.com","hindustantimes.com",
+    "indianexpress.com","livemint.com","businessstandard.com",
+    "economictimes.indiatimes.com","news18.com","moneycontrol.com",
+    "indiatimes.com","aajtak.in","abplive.com","zeenews.india.com",
+
+    # Indian Govt
+    "india.gov.in","mygov.in","uidai.gov.in","incometax.gov.in",
+    "gst.gov.in","epfindia.gov.in","digilocker.gov.in","mca.gov.in",
+    "nic.in","nptel.ac.in","irda.gov.in","trai.gov.in",
+
+    # Shopping Global
+    "ebay.com","etsy.com","walmart.com","target.com","bestbuy.com",
+    "costco.com","ikea.com","wayfair.com","aliexpress.com","alibaba.com",
+
+    # Travel Global
+    "booking.com","airbnb.com","expedia.com","tripadvisor.com",
+    "hotels.com","kayak.com","skyscanner.com","uber.com","lyft.com",
+    "agoda.com","airasia.com","emirates.com","singaporeair.com",
+
+    # News Global
+    "nytimes.com","bbc.com","bbc.co.uk","cnn.com","reuters.com",
+    "theguardian.com","forbes.com","bloomberg.com","wsj.com",
+    "washingtonpost.com","techcrunch.com","wired.com",
+    "theverge.com","arstechnica.com","apnews.com",
+
+    # Education
+    "wikipedia.org","coursera.org","udemy.com","edx.org",
+    "khanacademy.org","duolingo.com","codecademy.com",
+    "freecodecamp.org","w3schools.com","geeksforgeeks.org",
+    "hackerrank.com","leetcode.com","harvard.edu","mit.edu",
+    "stanford.edu","britannica.com","archive.org","medium.com",
+
+    # Health
+    "who.int","cdc.gov","nih.gov","mayoclinic.org","webmd.com",
+    "healthline.com","apollohospitals.com","practo.com",
+    "1mg.com","pharmeasy.in","netmeds.com",
+
+    # Security
+    "virustotal.com","kaspersky.com","norton.com","malwarebytes.com",
+    "crowdstrike.com","avg.com","bitdefender.com","avast.com",
+    "mcafee.com","sophos.com","trendmicro.com",
+
+    # Other
+    "duckduckgo.com","ecosia.org","wolframalpha.com","internshala.com",
+    "naukri.com","indeed.com","glassdoor.com","monster.com",
+    "booking.com","yelp.com","trustpilot.com","imdb.com",
+    "goodreads.com","producthunt.com","trello.com","asana.com",
+    "hubspot.com","salesforce.com","mailchimp.com","sendinblue.com",
+}
+
+
+def is_trusted_domain(domain: str) -> bool:
+    """Check if domain or any parent domain is trusted."""
+    domain = domain.lower().replace("www.", "")
+    # Exact match
+    if domain in TRUSTED_DOMAINS:
+        return True
+    # Check if it's a subdomain of a trusted domain
+    parts = domain.split(".")
+    for i in range(1, len(parts)):
+        parent = ".".join(parts[i:])
+        if parent in TRUSTED_DOMAINS:
+            return True
+    return False
 
 
 def extract_features(url: str) -> dict:
     try:
-        parsed  = urlparse(url)
-        domain  = parsed.netloc.lower()
-        path    = parsed.path.lower()
-        query   = parsed.query.lower()
-        full    = url.lower()
+        parsed = urlparse(url)
+        domain = parsed.netloc.lower()
+        path   = parsed.path.lower()
+        query  = parsed.query.lower()
+        full   = url.lower()
         features = {}
 
         features["url_length"]       = len(url)
@@ -50,25 +200,29 @@ def extract_features(url: str) -> dict:
             "invoice","payment","refund","cancel","suspend","restore",
             "recover","helpdesk","support","service","customer","security"
         ]
-        features["suspicious_keywords"] = sum(
-            1 for kw in PHISH_KEYWORDS if kw in full)
+        # Only count keywords in domain/path, NOT query params for trusted domains
+        domain_clean = domain.replace("www.", "")
+        trusted = is_trusted_domain(domain_clean)
+        if trusted:
+            # For trusted domains, only check domain itself for keywords
+            features["suspicious_keywords"] = sum(
+                1 for kw in PHISH_KEYWORDS if kw in domain_clean)
+        else:
+            features["suspicious_keywords"] = sum(
+                1 for kw in PHISH_KEYWORDS if kw in full)
 
         SHORTENERS = [
             "bit.ly","tinyurl","goo.gl","t.co","ow.ly","short.link",
             "rb.gy","cutt.ly","is.gd","buff.ly","ift.tt","dlvr.it",
-            "su.pr","twit.ac","snurl.com","cli.gs","twitthis.com"
         ]
         features["is_shortener"] = 1 if any(
             s in domain for s in SHORTENERS) else 0
 
         FREE_HOSTS = [
             "godaddysites.com","wixsite.com","weebly.com","webflow.io",
-            "sites.google.com","blogspot.com","000webhostapp.com",
-            "netlify.app","vercel.app","github.io","glitch.me",
+            "blogspot.com","000webhostapp.com","glitch.me",
             "replit.dev","carrd.co","strikingly.com","jimdo.com",
-            "yolasite.com","angelfire.com","tripod.com","bravenet.com",
-            "freehosting.com","infinityfree.net","byethost.com",
-            "esy.es","atspace.com","site123.me","sitey.me"
+            "yolasite.com","angelfire.com","tripod.com",
         ]
         features["is_free_host"] = 1 if any(
             h in domain for h in FREE_HOSTS) else 0
@@ -77,7 +231,8 @@ def extract_features(url: str) -> dict:
             ".tk",".ml",".ga",".cf",".gq",".xyz",".click",
             ".win",".loan",".top",".buzz",".icu",".cam",
             ".country",".stream",".download",".racing",
-            ".party",".review",".science",".work"
+            ".party",".review",".science",".work",".fit",
+            ".pw",".cc",".su",".bid",".trade",".date"
         ]
         tld = "." + domain.split(".")[-1] if "." in domain else ""
         features["suspicious_tld"] = 1 if tld in SUSPICIOUS_TLDS else 0
@@ -88,15 +243,14 @@ def extract_features(url: str) -> dict:
             "dropbox","adobe","yahoo","outlook","office","windows",
             "gmail","youtube","spotify","uber","airbnb","ebay",
             "bankofamerica","chase","wellsfargo","citibank",
-            "sbi","hdfc","icici","axis","paytm","phonepe"
+            "sbi","hdfc","icici","axis","paytm","phonepe",
+            "flipkart","myntra","swiggy","zomato","zerodha","groww"
         ]
-        domain_clean = domain.replace("www.","")
-        known_domains = [b + ".com" for b in BRANDS] + \
-                       [b + ".in" for b in BRANDS]
-        brand_in_domain  = any(b in domain_clean for b in BRANDS)
-        is_actual_brand  = domain_clean in known_domains
+
+        # Brand impersonation: only flag if NOT a trusted domain
+        brand_in_domain = any(b in domain_clean for b in BRANDS)
         features["brand_impersonation"] = 1 if (
-            brand_in_domain and not is_actual_brand) else 0
+            brand_in_domain and not trusted) else 0
 
         domain_alpha = domain_clean.split(".")[0]
         if domain_alpha:
@@ -107,6 +261,9 @@ def extract_features(url: str) -> dict:
 
         features["special_chars"] = sum(
             1 for c in domain if not c.isalnum() and c not in ".-")
+
+        # Trusted domain feature — key for accuracy
+        features["is_trusted_domain"] = 1 if trusted else 0
 
         return features
 
@@ -119,7 +276,7 @@ def extract_features(url: str) -> dict:
             "has_double_slash","has_redirect","has_punycode",
             "suspicious_keywords","is_shortener","is_free_host",
             "suspicious_tld","brand_impersonation","digit_ratio",
-            "special_chars"
+            "special_chars","is_trusted_domain"
         ]}
 
 
@@ -130,7 +287,17 @@ def calculate_entropy(text: str) -> float:
     return -sum(p * math.log2(p) for p in prob)
 
 
-def heuristic_score(features: dict) -> int:
+def heuristic_score(features: dict, is_trusted: bool) -> int:
+    # Trusted domains always start at 95
+    if is_trusted:
+        score = 95
+        # Minor deductions only for truly dangerous signals
+        if features.get("has_ip"):    score -= 40
+        if features.get("has_at"):    score -= 30
+        if features.get("has_punycode"): score -= 10
+        return max(60, min(100, score))
+
+    # Unknown domains — full scoring
     score = 100
     if features.get("has_ip"):               score -= 40
     if features.get("has_at"):               score -= 30
@@ -157,7 +324,7 @@ def heuristic_score(features: dict) -> int:
     return max(0, min(100, score))
 
 
-def get_flags(features: dict) -> list:
+def get_flags(features: dict, is_trusted: bool) -> list:
     flags = []
     if features.get("has_ip"):
         flags.append({"message": "🔴 IP address used instead of domain name", "severity": "high"})
@@ -169,7 +336,7 @@ def get_flags(features: dict) -> list:
         flags.append({"message": "🔴 Suspicious free/untrusted TLD", "severity": "high"})
     if features.get("has_punycode"):
         flags.append({"message": "🔴 Punycode domain — visual spoofing risk", "severity": "high"})
-    if not features.get("has_https"):
+    if not features.get("has_https") and not is_trusted:
         flags.append({"message": "🟡 No HTTPS — connection not encrypted", "severity": "medium"})
     if features.get("is_free_host"):
         flags.append({"message": "🟡 Free website builder — common fraud tactic", "severity": "medium"})
@@ -177,20 +344,20 @@ def get_flags(features: dict) -> list:
         flags.append({"message": "🟡 URL shortener hides real destination", "severity": "medium"})
     if features.get("has_double_slash"):
         flags.append({"message": "🟡 Double slash redirect in URL", "severity": "medium"})
-    if features.get("num_subdomains", 0) > 2:
+    if features.get("num_subdomains", 0) > 2 and not is_trusted:
         flags.append({"message": f"🟡 Excessive subdomains ({features['num_subdomains']})", "severity": "medium"})
     kw = features.get("suspicious_keywords", 0)
-    if kw > 0:
+    if kw > 0 and not is_trusted:
         flags.append({"message": f"🟡 {kw} phishing keyword(s) found in URL", "severity": "medium"})
-    if features.get("domain_entropy", 0) > 3.5:
+    if features.get("domain_entropy", 0) > 3.5 and not is_trusted:
         flags.append({"message": "🟡 Domain name appears randomly generated", "severity": "medium"})
-    if features.get("digit_ratio", 0) > 0.4:
+    if features.get("digit_ratio", 0) > 0.4 and not is_trusted:
         flags.append({"message": "🟡 High digit ratio in domain name", "severity": "medium"})
-    if features.get("url_length", 0) > 100:
+    if features.get("url_length", 0) > 100 and not is_trusted:
         flags.append({"message": f"⚪ Very long URL ({features['url_length']} chars)", "severity": "low"})
     if features.get("has_port"):
         flags.append({"message": "⚪ Non-standard port in URL", "severity": "low"})
-    if features.get("special_chars", 0) > 0:
+    if features.get("special_chars", 0) > 0 and not is_trusted:
         flags.append({"message": "⚪ Special characters in domain", "severity": "low"})
     if not flags:
         flags.append({"message": "✅ No suspicious patterns detected", "severity": "safe"})
@@ -220,107 +387,33 @@ def get_tld(domain: str) -> str:
 
 def estimate_domain_age(domain: str) -> dict:
     d = domain.replace("www.", "").lower()
-
     KNOWN_DOMAINS = {
-        "google.com": 1997, "google.co.in": 2004,
-        "youtube.com": 2005, "microsoft.com": 1991,
-        "apple.com": 1987, "amazon.com": 1994,
-        "amazon.in": 2004, "meta.com": 2021,
-        "facebook.com": 2004, "twitter.com": 2006,
-        "x.com": 1996, "instagram.com": 2010,
-        "linkedin.com": 2002, "reddit.com": 2005,
-        "pinterest.com": 2010, "tiktok.com": 2016,
-        "snapchat.com": 2011, "whatsapp.com": 2009,
-        "telegram.org": 2013, "discord.com": 2015,
-        "twitch.tv": 2011, "yahoo.com": 1995,
-        "bing.com": 2009, "duckduckgo.com": 2008,
-        "ebay.com": 1995, "walmart.com": 1996,
-        "etsy.com": 2005, "shopify.com": 2006,
-        "flipkart.com": 2007, "myntra.com": 2007,
-        "meesho.com": 2015, "snapdeal.com": 2010,
-        "ajio.com": 2016, "nykaa.com": 2012,
-        "bigbasket.com": 2011, "blinkit.com": 2013,
-        "zepto.com": 2021, "swiggy.com": 2014,
-        "zomato.com": 2008, "alibaba.com": 1999,
-        "aliexpress.com": 2010, "target.com": 1999,
-        "paypal.com": 1999, "stripe.com": 2010,
-        "razorpay.com": 2014, "paytm.com": 2010,
-        "phonepe.com": 2015, "sbi.co.in": 1955,
-        "hdfcbank.com": 1994, "icicibank.com": 1994,
-        "axisbank.com": 1993, "kotakbank.com": 1985,
-        "zerodha.com": 2010, "groww.in": 2016,
-        "upstox.com": 2012, "coinbase.com": 2012,
-        "binance.com": 2017, "visa.com": 1975,
-        "netflix.com": 1997, "spotify.com": 2006,
-        "hotstar.com": 2015, "primevideo.com": 2016,
-        "disneyplus.com": 2019, "sonyliv.com": 2013,
-        "zee5.com": 2018, "jiosaavn.com": 2007,
-        "soundcloud.com": 2007, "hulu.com": 2007,
-        "github.com": 2007, "gitlab.com": 2011,
-        "bitbucket.org": 2008, "stackoverflow.com": 2008,
-        "npmjs.com": 2010, "pypi.org": 2003,
-        "docker.com": 2013, "cloudflare.com": 2009,
-        "digitalocean.com": 2011, "vercel.com": 2015,
-        "netlify.com": 2014, "wordpress.com": 2005,
-        "wix.com": 2006, "godaddy.com": 1997,
-        "virustotal.com": 2004, "kaspersky.com": 1997,
-        "norton.com": 1990, "malwarebytes.com": 2004,
-        "crowdstrike.com": 2011, "openai.com": 2015,
-        "anthropic.com": 2021, "claude.ai": 2022,
-        "huggingface.co": 2016, "nvidia.com": 1993,
-        "bbc.com": 1995, "cnn.com": 1995,
-        "reuters.com": 1995, "bloomberg.com": 1990,
-        "ndtv.com": 1997, "thehindu.com": 1878,
-        "timesofindia.com": 1838, "hindustantimes.com": 1924,
-        "indianexpress.com": 1932, "moneycontrol.com": 1999,
-        "techcrunch.com": 2005, "theverge.com": 2011,
-        "wikipedia.org": 2001, "coursera.org": 2012,
-        "udemy.com": 2010, "edx.org": 2012,
-        "khanacademy.org": 2008, "codecademy.com": 2011,
-        "freecodecamp.org": 2014, "w3schools.com": 1998,
-        "geeksforgeeks.org": 2009, "hackerrank.com": 2009,
-        "leetcode.com": 2011, "duolingo.com": 2011,
-        "apollohospitals.com": 1983, "practo.com": 2008,
-        "1mg.com": 2012, "pharmeasy.in": 2015,
-        "webmd.com": 1996, "mayoclinic.org": 1998,
-        "who.int": 1948, "cdc.gov": 1946,
-        "makemytrip.com": 2000, "goibibo.com": 2009,
-        "cleartrip.com": 2006, "irctc.co.in": 1999,
-        "airbnb.com": 2008, "booking.com": 1996,
-        "expedia.com": 1996, "tripadvisor.com": 2000,
-        "notion.so": 2016, "figma.com": 2016,
-        "slack.com": 2013, "zoom.us": 2011,
-        "dropbox.com": 2007, "adobe.com": 1986,
-        "salesforce.com": 1999, "gmail.com": 2004,
-        "outlook.com": 1997, "india.gov.in": 2005,
-        "mygov.in": 2014, "uidai.gov.in": 2009,
-        "incometax.gov.in": 2004, "gst.gov.in": 2017,
-        "rbi.org.in": 1935, "sebi.gov.in": 1988,
+        "google.com": 1997, "youtube.com": 2005, "microsoft.com": 1991,
+        "apple.com": 1987, "amazon.com": 1994, "amazon.in": 2004,
+        "facebook.com": 2004, "twitter.com": 2006, "instagram.com": 2010,
+        "linkedin.com": 2002, "reddit.com": 2005, "yahoo.com": 1995,
+        "bing.com": 2009, "duckduckgo.com": 2008, "whatsapp.com": 2009,
+        "netflix.com": 1997, "spotify.com": 2006, "github.com": 2007,
+        "stackoverflow.com": 2008, "paypal.com": 1999, "stripe.com": 2010,
+        "flipkart.com": 2007, "myntra.com": 2007, "paytm.com": 2010,
+        "phonepe.com": 2015, "zerodha.com": 2010, "groww.in": 2016,
+        "sbi.co.in": 1955, "hdfcbank.com": 1994, "icicibank.com": 1994,
+        "axisbank.com": 1993, "rbi.org.in": 1935, "irctc.co.in": 1999,
+        "wikipedia.org": 2001, "coursera.org": 2012, "udemy.com": 2010,
+        "openai.com": 2015, "claude.ai": 2022, "anthropic.com": 2021,
+        "bbc.com": 1995, "cnn.com": 1995, "ndtv.com": 1997,
+        "timesofindia.com": 1838, "thehindu.com": 1878,
+        "who.int": 1948, "cdc.gov": 1946, "mayoclinic.org": 1998,
+        "booking.com": 1996, "airbnb.com": 2008, "makemytrip.com": 2000,
+        "zoom.us": 2011, "slack.com": 2013, "notion.so": 2016,
+        "virustotal.com": 2004, "swiggy.com": 2014, "zomato.com": 2008,
+        "discord.com": 2015, "telegram.org": 2013, "tiktok.com": 2016,
+        "coinbase.com": 2012, "binance.com": 2017, "razorpay.com": 2014,
+        "shopify.com": 2006, "adobe.com": 1986, "figma.com": 2016,
+        "huggingface.co": 2016, "medium.com": 2012, "quora.com": 2009,
         "naukri.com": 1997, "indeed.com": 2004,
-        "glassdoor.com": 2007, "medium.com": 2012,
-        "archive.org": 1996, "neverssl.com": 2016,
-        "pnbindia.in": 1895, "bankofbaroda.in": 1908,
-        "canarabank.com": 1906, "indusind.com": 1994,
-        "yesbank.in": 2004, "rblbank.com": 1943,
-        "federalbank.co.in": 1931, "angelone.in": 1996,
-        "mastercard.com": 1966, "americanexpress.com": 1850,
-        "westernunion.com": 1851, "ebay.com": 1995,
-        "bestbuy.com": 1999, "quora.com": 2009,
-        "yelp.com": 2004, "flipkart.com": 2007,
-        "myntra.com": 2007, "nykaa.com": 2012,
-        "bigbasket.com": 2011, "zepto.com": 2021,
-        "nptel.ac.in": 2001, "internshala.com": 2010,
-        "avg.com": 1991, "bitdefender.com": 2001,
-        "sophos.com": 1985, "avast.com": 1988,
-        "mcafee.com": 1987, "deepmind.com": 2010,
-        "epfindia.gov.in": 2001, "digilocker.gov.in": 2015,
-        "wired.com": 1993, "forbes.com": 1917,
-        "phonpe.com": 2015, "mobikwik.com": 2009,
-        "gaana.com": 2010, "wynk.in": 2014,
     }
-
     current_year = datetime.now().year
-
     if d in KNOWN_DOMAINS:
         reg_year  = KNOWN_DOMAINS[d]
         age_years = current_year - reg_year
@@ -330,87 +423,52 @@ def estimate_domain_age(domain: str) -> dict:
             "age_label":      f"~{age_years} years old",
             "trust": "established" if age_years > 5 else "relatively new"
         }
-
     tld = get_tld(d)
-    SUSPICIOUS_TLDS = [
-        ".tk",".ml",".ga",".cf",".gq",".xyz",".click",
-        ".win",".loan",".top",".buzz",".icu",".cam"
-    ]
+    SUSPICIOUS_TLDS = [".tk",".ml",".ga",".cf",".gq",".xyz",
+                       ".click",".win",".loan",".top",".buzz",".icu"]
     if tld in SUSPICIOUS_TLDS:
-        return {
-            "estimated_year": current_year,
-            "age_years":      0,
-            "age_label":      "Likely very new (<1 year)",
-            "trust":          "untrustworthy"
-        }
-
-    return {
-        "estimated_year": None,
-        "age_years":      None,
-        "age_label":      "Unknown — WHOIS lookup needed",
-        "trust":          "unverified"
-    }
+        return {"estimated_year": current_year, "age_years": 0,
+                "age_label": "Likely very new (<1 year)", "trust": "untrustworthy"}
+    return {"estimated_year": None, "age_years": None,
+            "age_label": "Unknown — WHOIS lookup needed", "trust": "unverified"}
 
 
 def get_site_type(url: str, domain: str) -> str:
     d = domain.replace("www.", "").lower()
-
-    SOCIAL     = ["facebook","twitter","instagram","linkedin","tiktok",
-                  "snapchat","pinterest","reddit","youtube","telegram",
-                  "whatsapp","discord","twitch","quora","x.com","meta","threads"]
-    ECOMMERCE  = ["amazon","ebay","flipkart","shopify","etsy","walmart",
-                  "meesho","myntra","ajio","nykaa","snapdeal","bigbasket",
-                  "blinkit","zepto","swiggy","zomato","alibaba","aliexpress",
-                  "shop","store","cart","buy","mall","market","deals","order"]
+    SOCIAL     = ["facebook","twitter","instagram","linkedin","tiktok","snapchat",
+                  "pinterest","reddit","youtube","telegram","whatsapp","discord",
+                  "twitch","quora","x.com","meta","threads","signal"]
+    ECOMMERCE  = ["amazon","ebay","flipkart","shopify","etsy","walmart","meesho",
+                  "myntra","ajio","nykaa","snapdeal","bigbasket","blinkit","zepto",
+                  "swiggy","zomato","alibaba","aliexpress","shop","store","cart"]
     FINANCE    = ["bank","finance","invest","trading","crypto","paypal","stripe",
-                  "razorpay","paytm","phonepe","zerodha","groww","upstox",
-                  "wallet","money","loan","insurance","mortgage","credit",
-                  "sbi","hdfc","icici","axis","kotak","pnb","canara","rbi",
-                  "sebi","visa","mastercard","binance","coinbase","stock"]
+                  "razorpay","paytm","phonepe","zerodha","groww","upstox","wallet",
+                  "sbi","hdfc","icici","axis","kotak","rbi","sebi","visa",
+                  "mastercard","binance","coinbase","stock","insurance","loan"]
     HEALTH     = ["health","hospital","clinic","doctor","pharma","medicine",
-                  "medical","apollo","fortis","practo","1mg","pharmeasy",
-                  "webmd","mayoclinic","who","cdc","dental","therapy",
-                  "wellness","fitness","gym","diet","pharmacy","drug"]
+                  "apollo","practo","1mg","pharmeasy","webmd","mayoclinic","who","cdc"]
     EDU        = ["university","college","school","academy","learn","course",
-                  "tutorial","wikipedia","stackoverflow","coursera","udemy",
-                  "edx","khanacademy","nptel","codecademy","freecodecamp",
+                  "wikipedia","stackoverflow","coursera","udemy","edx",
+                  "khanacademy","nptel","codecademy","freecodecamp",
                   "w3schools","geeksforgeeks","hackerrank","leetcode","edu"]
     GOV        = [".gov",".gov.in","government","ministry","official",
-                  "india.gov","mygov","uidai","incometax","gst.gov",
-                  "epfindia","municipality","parliament","court","police"]
-    NEWS       = ["news","times","post","herald","tribune","media","bbc",
-                  "cnn","ndtv","hindu","express","reuters","bloomberg",
-                  "forbes","techcrunch","theverge","wired","hindustantimes",
-                  "indianexpress","livemint","economictimes","moneycontrol"]
-    TECH       = ["github","microsoft","google","apple","amazon","cloud",
-                  "api","dev","software","tech","app","virustotal","security",
-                  "cyber","openai","anthropic","claude","huggingface","nvidia",
-                  "docker","kubernetes","aws","azure","cloudflare","heroku",
-                  "vercel","netlify","wordpress","wix","godaddy","stackoverflow"]
+                  "india.gov","mygov","uidai","incometax","gst.gov","epfindia"]
+    NEWS       = ["news","times","post","herald","tribune","bbc","cnn","ndtv",
+                  "hindu","express","reuters","bloomberg","forbes","techcrunch",
+                  "theverge","wired","hindustantimes","indianexpress","livemint"]
+    TECH       = ["github","microsoft","google","apple","amazon","cloud","api",
+                  "dev","software","tech","app","virustotal","security","cyber",
+                  "openai","anthropic","claude","huggingface","nvidia","docker",
+                  "vercel","netlify","render","wordpress","cloudflare","stackoverflow"]
     STREAM     = ["netflix","hotstar","primevideo","disneyplus","spotify",
-                  "jiocinema","sonyliv","zee5","voot","gaana","jiosaavn",
-                  "soundcloud","hulu","hbo","music","video","stream",
-                  "play","watch","movie","series","podcast","radio"]
+                  "sonyliv","zee5","gaana","jiosaavn","soundcloud","hulu","music",
+                  "video","stream","movie","series","podcast"]
     TRAVEL     = ["travel","hotel","flight","booking","airbnb","makemytrip",
-                  "goibibo","cleartrip","irctc","expedia","tripadvisor",
-                  "agoda","hotels","kayak","skyscanner","vacation","tour"]
-    FOOD       = ["food","restaurant","cafe","kitchen","recipe","swiggy",
-                  "zomato","ubereats","pizza","burger","menu","dining"]
-    REALESTATE = ["realty","property","estate","housing","apartment","rent",
-                  "lease","mortgage","magicbricks","99acres","housing.com",
-                  "nobroker","zillow","realtor","builder","construction"]
-    AUTO       = ["auto","car","bike","vehicle","motor","maruti","hyundai",
-                  "tata","mahindra","honda","toyota","bmw","mercedes",
-                  "cardekho","carwale","bikewale"]
-    JOBS       = ["job","career","recruit","hire","employment","naukri",
-                  "indeed","monster","glassdoor","foundit","timesjobs",
-                  "internshala","placement","resume","interview"]
-    MARKETING  = ["marketing","advertising","ads","seo","digital","campaign",
-                  "brand","mailchimp","hubspot","salesforce","analytics",
-                  "semrush","agency","consultant","promotion"]
+                  "goibibo","cleartrip","irctc","expedia","tripadvisor","agoda"]
+    JOBS       = ["job","career","recruit","hire","naukri","indeed","glassdoor",
+                  "foundit","internshala","monster","placement","resume"]
     FREE_BUILD = ["godaddysites","wixsite","weebly","webflow","blogspot",
-                  "000webhostapp","netlify.app","vercel.app","github.io",
-                  "glitch.me","replit.dev","carrd","strikingly","jimdo"]
+                  "000webhostapp","glitch.me","replit","carrd","strikingly","jimdo"]
     PHISH      = ["verify-account","secure-login","account-update",
                   "confirm-identity","suspended-account","prize-claim",
                   "free-reward","urgent-action","limited-time-offer"]
@@ -427,11 +485,7 @@ def get_site_type(url: str, domain: str) -> str:
     if any(s in d for s in TECH):        return "💻 Technology / Security"
     if any(s in d for s in STREAM):      return "🎬 Streaming / Entertainment"
     if any(s in d for s in TRAVEL):      return "✈️ Travel / Hospitality"
-    if any(s in d for s in FOOD):        return "🍔 Food / Restaurant"
-    if any(s in d for s in REALESTATE):  return "🏠 Real Estate"
-    if any(s in d for s in AUTO):        return "🚗 Automobile"
     if any(s in d for s in JOBS):        return "💼 Jobs / Recruitment"
-    if any(s in d for s in MARKETING):   return "📣 Marketing / Advertising"
     return "🌐 General / Unknown"
 
 
@@ -459,16 +513,11 @@ def get_domain_info(url: str) -> dict:
     org_type  = get_org_type(domain)
     protocol  = parsed.scheme.upper()
 
-    TRUSTED_TLDS = [
-        ".com",".org",".net",".edu",".gov",".co.uk",
-        ".co.in",".in",".ai",".io",".ac.in",".gov.in",
-        ".mil",".int",".dev",".app",".tech"
-    ]
-    SUSPICIOUS_TLDS = [
-        ".tk",".ml",".ga",".cf",".gq",".xyz",".click",
-        ".win",".loan",".top",".buzz",".icu",".cam"
-    ]
-
+    TRUSTED_TLDS = [".com",".org",".net",".edu",".gov",".co.uk",
+                    ".co.in",".in",".ai",".io",".ac.in",".gov.in",
+                    ".mil",".int",".dev",".app",".tech"]
+    SUSPICIOUS_TLDS = [".tk",".ml",".ga",".cf",".gq",".xyz",".click",
+                       ".win",".loan",".top",".buzz",".icu",".cam"]
     tld_trust = (
         "Trusted TLD"    if tld in TRUSTED_TLDS    else
         "Suspicious TLD" if tld in SUSPICIOUS_TLDS else
@@ -495,6 +544,30 @@ def predict_url(url: str) -> dict:
     domain_info = get_domain_info(url)
     vector      = list(features.values())
 
+    parsed  = urlparse(url)
+    domain  = parsed.netloc.lower().replace("www.", "")
+    trusted = is_trusted_domain(domain)
+
+    # ── TRUSTED DOMAIN OVERRIDE ───────────────────────────────────────
+    # Known safe domains always get at least 88 score
+    if trusted:
+        base_score = 92
+        # Small deductions only for truly dangerous signals
+        if features.get("has_ip"):    base_score -= 40
+        if features.get("has_at"):    base_score -= 30
+        final_score = max(75, min(100, base_score))
+
+        return {
+            "url":          url,
+            "safety_score": final_score,
+            "category":     get_category(final_score),
+            "risk_level":   get_risk_level(final_score),
+            "flags":        get_flags(features, trusted),
+            "features":     features,
+            "domain_info":  domain_info
+        }
+
+    # ── ML MODEL PREDICTION for unknown domains ───────────────────────
     ml_score = None
     if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
         try:
@@ -514,13 +587,14 @@ def predict_url(url: str) -> dict:
         except Exception:
             pass
 
-    h_score = heuristic_score(features)
+    h_score = heuristic_score(features, trusted)
 
     if ml_score is not None:
         final_score = int(ml_score * 0.6 + h_score * 0.4)
     else:
         final_score = h_score
 
+    # Hard caps for dangerous signals
     if features.get("brand_impersonation"): final_score = min(final_score, 30)
     if features.get("has_ip"):              final_score = min(final_score, 25)
     if features.get("suspicious_tld") and not features.get("has_https"):
@@ -531,7 +605,7 @@ def predict_url(url: str) -> dict:
         "safety_score": max(0, min(100, final_score)),
         "category":     get_category(final_score),
         "risk_level":   get_risk_level(final_score),
-        "flags":        get_flags(features),
+        "flags":        get_flags(features, trusted),
         "features":     features,
         "domain_info":  domain_info
     }
