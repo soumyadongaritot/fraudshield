@@ -1,5 +1,5 @@
 // popup.js - FraudShield v3.1
-const API_URL = "https://fraudshield-2u9l.onrender.com";
+const API_URL = "https://fraudshield-1-pkvb.onrender.com";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
