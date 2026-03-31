@@ -1,9 +1,7 @@
-// FraudShield v3.2 — Background Service Worker
-// Handles: notifications, auto-CSV, badge updates
+// FraudShield v4.0 — Background Service Worker
 
 const API_URL = "https://fraudshield-2u9l.onrender.com";
 
-// ── Badge ──────────────────────────────────────────────
 function getBadgeColor(score) {
   if (score >= 85) return "#00ff88";
   if (score >= 65) return "#ffcc00";
@@ -11,12 +9,9 @@ function getBadgeColor(score) {
   return "#ff4444";
 }
 
-// ── Desktop notification ───────────────────────────────
 function sendNotification(result, url) {
-  const score    = result.safety_score;
-  const domain   = result.domain_info?.domain || new URL(url).hostname;
-  const category = result.category;
-
+  const score  = result.safety_score;
+  const domain = result.domain_info?.domain || new URL(url).hostname;
   let title, message;
 
   if (score < 25) {
@@ -29,8 +24,7 @@ function sendNotification(result, url) {
     title   = "⚠️ Suspicious Page";
     message = `${domain} has risk factors. Proceed with caution. (Score: ${score}/100)`;
   } else {
-    title   = "⚡ Low-Medium Risk Page";
-    message = `${domain} appears mostly safe but has some signals. (Score: ${score}/100)`;
+    return;
   }
 
   chrome.notifications.create({
@@ -42,98 +36,46 @@ function sendNotification(result, url) {
   });
 }
 
-// ── Auto-save CSV ──────────────────────────────────────
-function autoSaveCSV() {
-  chrome.storage.local.get("scanHistory", (result) => {
-    const history = result.scanHistory || [];
-    if (history.length === 0) return;
-
-    const headers = ["URL","Safety Score","Category","Risk Level","Site Type","Domain","Protocol","Date & Time"];
-    const rows = history.map(e => {
-      const date = new Date(e.timestamp).toLocaleString();
-      const safeUrl = `"${(e.url||"").replace(/"/g,'""')}"`;
-      return [
-        safeUrl,
-        e.score ?? "",
-        `"${e.category ?? ""}"`,
-        `"${e.risk ?? ""}"`,
-        `"${e.site_type ?? ""}"`,
-        `"${e.domain ?? ""}"`,
-        `"${e.protocol ?? ""}"`,
-        `"${date}"`
-      ].join(",");
-    });
-
-    const csv     = [headers.join(","), ...rows].join("\n");
-    const b64     = btoa(unescape(encodeURIComponent(csv)));
-    const dataUrl = "data:text/csv;base64," + b64;
-
-    const today = new Date().toISOString().split("T")[0];
-
-    chrome.downloads.download({
-      url:      dataUrl,
-      filename: `fraudshield-${today}.csv`,
-      saveAs:   false,
-      conflictAction: "overwrite"
-    }, (downloadId) => {
-      if (chrome.runtime.lastError) {
-        console.warn("CSV download error:", chrome.runtime.lastError.message);
-      }
-    });
-  });
-}
-
-// ── Listen for messages from popup/content ─────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.type === "SCAN_COMPLETE") {
     const { result, url, tabId } = message;
     const score = result.safety_score;
 
-    // 1. Update badge
     if (tabId) {
-      chrome.action.setBadgeText({
-        text:  score < 85 ? "!" : "",
-        tabId: tabId
-      });
-      chrome.action.setBadgeBackgroundColor({
-        color: getBadgeColor(score),
-        tabId: tabId
-      });
+      chrome.action.setBadgeText({ text: score < 85 ? "!" : "", tabId });
+      chrome.action.setBadgeBackgroundColor({ color: getBadgeColor(score), tabId });
     }
 
-    // 2. Send desktop notification for risky pages only
-    if (score < 65) {
-      sendNotification(result, url);
-    }
-
-    // 3. Auto-save CSV
-    autoSaveCSV();
-
+    if (score < 65) sendNotification(result, url);
     sendResponse({ ok: true });
   }
 
   if (message.type === "UPDATE_BADGE") {
     const tabId = sender.tab?.id;
     if (!tabId) return;
-    chrome.action.setBadgeText({
-      text:  message.score < 85 ? "!" : "",
-      tabId: tabId
-    });
-    chrome.action.setBadgeBackgroundColor({
-      color: getBadgeColor(message.score),
-      tabId: tabId
-    });
+    chrome.action.setBadgeText({ text: message.score < 85 ? "!" : "", tabId });
+    chrome.action.setBadgeBackgroundColor({ color: getBadgeColor(message.score), tabId });
   }
 
-  if (message.type === "EXPORT_CSV") {
-    autoSaveCSV();
+  if (message.type === "DOWNLOAD_CSV") {
+    chrome.downloads.download({
+      url:            message.url,
+      filename:       message.filename || "fraudshield-scans.csv",
+      saveAs:         false,
+      conflictAction: "overwrite"
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        console.warn("CSV download error:", chrome.runtime.lastError.message);
+      }
+    });
     sendResponse({ ok: true });
   }
+
+  return true;
 });
 
-// ── Clear badge on navigation ──────────────────────────
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
     chrome.action.setBadgeText({ text: "", tabId });
     chrome.storage.local.remove(String(tabId));

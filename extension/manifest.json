@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FraudShield - AI Fraud Detector",
-  "version": "3.2.0",
-  "description": "Real-time AI-powered fraud website detection",
+  "version": "4.0.0",
+  "description": "Real-time AI-powered fraud website detection with cloud sync",
   "permissions": [
     "activeTab",
     "tabs",
@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "<all_urls>",
-    "https://fraudshield-2u9l.onrender.com/*"
+    "https://fraudshield-2u9l.onrender.com/*",
+    "https://bgfztnukkgcakeogpvdi.supabase.co/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -38,6 +39,6 @@
     "128": "icons/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-2u9l.onrender.com;"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-2u9l.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co;"
   }
 }
