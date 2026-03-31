@@ -3,7 +3,7 @@ const API_URL = "https://fraudshield-1-pkvb.onrender.com";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
-document.addEventListener("DOMContentLoaded", async () => {
+window.initMainApp = async function () {
   document.getElementById("scanBtn").addEventListener("click", requestScan);
   document.getElementById("historyBtn").addEventListener("click", () => {
     chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   } else {
     showError("Navigate to a website first.");
   }
-});
+};
 
 async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -89,7 +89,6 @@ function saveToHistory(data, url) {
   });
 }
 
-// ── Export CSV ─────────────────────────────────────────
 function exportCSV(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
   const headers = ["URL","Safety Score","Category","Risk Level","Date & Time"];
@@ -104,7 +103,6 @@ function exportCSV(history) {
   a.click();
 }
 
-// ── Export PDF ─────────────────────────────────────────
 function exportPDF(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
