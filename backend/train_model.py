@@ -1,236 +1,461 @@
+# train_model.py — FraudShield ML Retraining Script
+# Downloads PhishTank + OpenPhish phishing URLs
+# Downloads Alexa/Tranco top legitimate URLs
+# Trains a Random Forest classifier and saves fraud_model.pkl + scaler.pkl
+
+import os
+import re
+import math
+import json
+import time
+import random
+import requests
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier, ExtraTreesClassifier, VotingClassifier
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
-from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from tqdm import tqdm
+from urllib.parse import urlparse, parse_qs
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier, VotingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.calibration import CalibratedClassifierCV
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 import joblib
-from features import get_features
+import warnings
+warnings.filterwarnings("ignore")
 
-# ── Hardcoded Safe URLs ───────────────────────────────────────────────
-SAFE_URLS = [
-    ("https://www.google.com", 0), ("https://www.google.co.in", 0),
-    ("https://www.bing.com", 0), ("https://duckduckgo.com", 0),
-    ("https://www.yahoo.com", 0), ("https://www.facebook.com", 0),
-    ("https://www.instagram.com", 0), ("https://www.twitter.com", 0),
-    ("https://www.linkedin.com/feed", 0), ("https://www.reddit.com", 0),
-    ("https://www.pinterest.com", 0), ("https://www.tiktok.com", 0),
-    ("https://www.youtube.com/watch", 0), ("https://discord.com/login", 0),
-    ("https://web.telegram.org", 0), ("https://www.whatsapp.com", 0),
-    ("https://www.microsoft.com", 0), ("https://www.apple.com", 0),
-    ("https://www.amazon.com", 0), ("https://www.amazon.in", 0),
-    ("https://www.netflix.com/login", 0), ("https://www.adobe.com", 0),
-    ("https://github.com", 0), ("https://stackoverflow.com", 0),
-    ("https://www.paypal.com/login", 0), ("https://stripe.com", 0),
-    ("https://www.flipkart.com", 0), ("https://www.wikipedia.org", 0),
-    ("https://www.coursera.org", 0), ("https://www.udemy.com", 0),
-    ("https://openai.com", 0), ("https://claude.ai", 0),
-    ("https://mail.google.com", 0), ("https://drive.google.com", 0),
-    ("https://www.india.gov.in", 0), ("https://uidai.gov.in", 0),
-    ("https://www.incometax.gov.in", 0), ("https://rbi.org.in", 0),
-    ("https://onlinesbi.sbi.co.in", 0), ("https://netbanking.hdfcbank.com", 0),
-    ("https://www.icicibank.com", 0), ("https://zerodha.com", 0),
-    ("https://groww.in", 0), ("https://www.bbc.com/news", 0),
-    ("https://www.cnn.com", 0), ("https://www.ndtv.com", 0),
-    ("https://www.thehindu.com", 0), ("https://techcrunch.com", 0),
-    ("https://www.makemytrip.com", 0), ("https://www.irctc.co.in", 0),
-    ("https://www.booking.com", 0), ("https://zoom.us", 0),
-    ("https://slack.com", 0), ("https://www.notion.so", 0),
-    ("https://www.figma.com", 0), ("https://vercel.com", 0),
-    ("https://netlify.com", 0), ("https://aws.amazon.com", 0),
-    ("https://azure.microsoft.com", 0), ("https://cloud.google.com", 0),
-    ("https://www.shopify.com", 0), ("https://www.wordpress.com", 0),
-    ("https://www.medium.com", 0), ("https://archive.org", 0),
-    ("https://huggingface.co", 0), ("https://www.anthropic.com", 0),
-    ("https://www.who.int", 0), ("https://www.cdc.gov", 0),
-    ("https://www.mayoclinic.org", 0), ("https://www.webmd.com", 0),
-    ("https://www.khanacademy.org", 0), ("https://leetcode.com", 0),
-    ("https://www.hackerrank.com", 0), ("https://www.geeksforgeeks.org", 0),
-    ("https://razorpay.com", 0), ("https://www.paytm.com", 0),
-    ("https://www.phonepe.com", 0), ("https://www.coinbase.com", 0),
-    ("https://www.spotify.com", 0), ("https://www.hotstar.com", 0),
-    ("https://www.naukri.com", 0), ("https://www.indeed.com", 0),
-    ("https://www.virustotal.com", 0), ("https://www.kaspersky.com", 0),
+print("=" * 60)
+print("  FraudShield ML Model Retraining")
+print("=" * 60)
+
+# ── Feature extraction (must match ml_model.py exactly) ──────────────
+
+SUSPICIOUS_TLDS = {
+    ".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".click",
+    ".win", ".loan", ".top", ".buzz", ".icu", ".cam",
+    ".country", ".stream", ".download", ".racing",
+    ".party", ".review", ".science", ".work", ".fit",
+    ".pw", ".cc", ".su", ".bid", ".trade", ".date"
+}
+
+PHISH_KEYWORDS = [
+    "login", "signin", "verify", "account", "update", "secure",
+    "banking", "paypal", "password", "confirm", "free", "prize",
+    "winner", "click", "alert", "warning", "suspended", "urgent",
+    "limited", "expire", "blocked", "locked", "unusual", "activity",
+    "validate", "authenticate", "authorize", "credential", "billing",
+    "invoice", "payment", "refund", "cancel", "suspend", "restore",
+    "recover", "helpdesk", "support", "service", "customer", "security",
+    "phishing", "scam", "hack", "malware", "fraud", "fake", "spoof"
 ]
 
-# ── Hardcoded Phishing URLs ───────────────────────────────────────────
-PHISHING_URLS = [
-    ("http://192.168.1.1/login/verify", 1),
-    ("http://10.0.0.1/admin/verify-account", 1),
-    ("http://paypal-secure.tk/verify", 1),
-    ("http://google-prize.ml/claim", 1),
-    ("http://amazon-winner.ga/free-gift", 1),
-    ("http://microsoft-alert.cf/security", 1),
-    ("http://apple-id-locked.gq/unlock", 1),
-    ("http://free-bitcoin.xyz/claim-now", 1),
-    ("http://bank-secure.click/login", 1),
-    ("http://account-verify.win/update", 1),
-    ("http://secure-banking.icu/login", 1),
-    ("http://paypa1-secure-login.com/verify-account", 1),
-    ("http://paypal-account-verify.com/login", 1),
-    ("http://amazon-prize-winner.click/free-gift", 1),
-    ("http://amaz0n-account.com/login", 1),
-    ("http://apple-id-suspended.com/verify", 1),
-    ("http://microsoft-security-warning.com/alert", 1),
-    ("http://microsofft-security.com/verify", 1),
-    ("http://google-prize-2024.com/claim", 1),
-    ("http://facebook-security-alert.com/login", 1),
-    ("http://faceb00k-verify.net/account", 1),
-    ("http://netflix-account-suspended.com/restore", 1),
-    ("http://sbi-bank-verify-account.tk/login", 1),
-    ("http://hdfc-secure-login.verify-now.com", 1),
-    ("http://paytm-secure-login.com/verify", 1),
-    ("http://bit.ly/2xKj9p3", 1),
-    ("http://tinyurl.com/fake-prize-claim", 1),
-    ("http://update-your-account-now.tk/login", 1),
-    ("http://verify-your-bank-account-now.xyz/login", 1),
-    ("http://secure-bank-login.verify-update.com", 1),
-    ("http://account-suspended-verify.com/restore", 1),
-    ("http://urgent-account-verify.com/login", 1),
-    ("http://free-gift-winner.ml/claim-now", 1),
-    ("http://password-reset-required.net/update", 1),
-    ("http://unusual-activity-detected.com/verify", 1),
-    ("http://billing-failed-update.net/payment", 1),
-    ("http://secure.login.verify.account.paypal.fake.com", 1),
-    ("http://your-paypal-account-has-been-limited-please-verify-now.com/login", 1),
-    ("http://xn--pypl-0ra.com/login", 1),
-    ("http://bitcoin-prize-2024.tk/claim", 1),
-    ("http://crypto-giveaway-elon.com/free-bitcoin", 1),
-    ("http://ethereum-prize-winner.xyz/claim-now", 1),
-    ("http://nft-free-mint.ml/connect-wallet", 1),
-    ("http://work-from-home-earn-daily.tk/register", 1),
-    ("http://you-won-1000000-rupees.tk/claim", 1),
-    ("http://lucky-draw-winner-2024.xyz/prize", 1),
-    ("http://government-scheme-free-money.ml/apply", 1),
-    ("http://paypal.com@192.168.1.1/login", 1),
-    ("http://google.com@phishing-site.com/steal", 1),
-    ("http://amazon.com@fake-site.tk/verify", 1),
-    ("http://online-job-5000-per-day.xyz/join", 1),
+SHORTENERS = [
+    "bit.ly", "tinyurl", "goo.gl", "t.co", "ow.ly", "short.link",
+    "rb.gy", "cutt.ly", "is.gd", "buff.ly",
 ]
 
+FREE_HOSTS = [
+    "godaddysites.com", "wixsite.com", "weebly.com", "webflow.io",
+    "blogspot.com", "000webhostapp.com", "glitch.me",
+    "replit.dev", "carrd.co", "strikingly.com",
+]
 
-def prepare_dataset():
-    rows, labels = [], []
+BRANDS = [
+    "paypal", "google", "microsoft", "amazon", "apple", "facebook",
+    "netflix", "instagram", "twitter", "whatsapp", "linkedin",
+    "dropbox", "adobe", "yahoo", "outlook", "office", "windows",
+    "gmail", "youtube", "spotify", "uber", "airbnb", "ebay",
+    "bankofamerica", "chase", "wellsfargo", "citibank",
+    "sbi", "hdfc", "icici", "axis", "paytm", "phonepe",
+]
 
-    # Load from CSV
+TRUSTED_DOMAINS = {
+    "google.com", "youtube.com", "facebook.com", "twitter.com",
+    "instagram.com", "linkedin.com", "amazon.com", "microsoft.com",
+    "apple.com", "netflix.com", "reddit.com", "wikipedia.org",
+    "github.com", "stackoverflow.com", "paypal.com", "ebay.com",
+    "yahoo.com", "bing.com", "live.com", "outlook.com",
+}
+
+
+def calculate_entropy(text: str) -> float:
+    if not text:
+        return 0.0
+    prob = [text.count(c) / len(text) for c in set(text)]
+    return -sum(p * math.log2(p) for p in prob)
+
+
+def extract_features(url: str) -> list:
     try:
-        df = pd.read_csv("/mnt/user-data/uploads/dataset.csv")
-        for _, row in df.iterrows():
-            try:
-                feats = get_features(str(row["url"]))
-                if feats:
-                    rows.append(feats)
-                    labels.append(int(row["label"]))
-            except Exception:
-                pass
-        print(f"   CSV: {len(rows)} samples loaded")
+        parsed = urlparse(url if url.startswith("http") else "http://" + url)
+        domain = parsed.netloc.lower()
+        path   = parsed.path.lower()
+        query  = parsed.query.lower()
+        full   = url.lower()
+
+        parts = domain.split(".")
+        tld   = "." + parts[-1] if parts else ""
+
+        domain_clean = domain.replace("www.", "")
+        trusted = domain_clean in TRUSTED_DOMAINS or any(
+            ".".join(parts[i:]) in TRUSTED_DOMAINS
+            for i in range(1, len(parts))
+        )
+
+        brand_in_domain = any(b in domain_clean for b in BRANDS)
+
+        domain_alpha = domain_clean.split(".")[0]
+        digit_ratio  = (
+            sum(c.isdigit() for c in domain_alpha) / len(domain_alpha)
+            if domain_alpha else 0
+        )
+
+        kw_count = (
+            sum(1 for kw in PHISH_KEYWORDS if kw in domain_clean)
+            if trusted else
+            sum(1 for kw in PHISH_KEYWORDS if kw in full)
+        )
+
+        return [
+            len(url),                                          # url_length
+            len(domain),                                       # domain_length
+            len(path),                                         # path_length
+            url.count("."),                                    # num_dots
+            url.count("-"),                                    # num_hyphens
+            url.count("_"),                                    # num_underscores
+            url.count("/"),                                    # num_slashes
+            sum(c.isdigit() for c in url),                    # num_digits
+            len(parse_qs(query)),                              # num_params
+            1 if "#" in url else 0,                           # num_fragments
+            max(0, len(parts) - 2),                           # num_subdomains
+            calculate_entropy(domain),                         # domain_entropy
+            1 if parsed.port else 0,                          # has_port
+            1 if re.match(r"^\d+\.\d+\.\d+\.\d+$",           # has_ip
+                          domain.split(":")[0]) else 0,
+            len(parts[-1]) if parts else 0,                   # tld_length
+            1 if url.startswith("https") else 0,              # has_https
+            1 if "@" in url else 0,                           # has_at
+            1 if url.count("//") > 1 else 0,                  # has_double_slash
+            1 if "//" in path else 0,                         # has_redirect
+            1 if "xn--" in domain else 0,                     # has_punycode
+            kw_count,                                          # suspicious_keywords
+            1 if any(s in domain for s in SHORTENERS) else 0, # is_shortener
+            1 if any(h in domain for h in FREE_HOSTS) else 0, # is_free_host
+            1 if tld in SUSPICIOUS_TLDS else 0,               # suspicious_tld
+            1 if (brand_in_domain and not trusted) else 0,    # brand_impersonation
+            digit_ratio,                                       # digit_ratio
+            sum(1 for c in domain                             # special_chars
+                if not c.isalnum() and c not in ".-"),
+            1 if trusted else 0,                              # is_trusted_domain
+        ]
+    except Exception:
+        return [0] * 28
+
+
+# ── Download datasets ─────────────────────────────────────────────────
+
+def download_phishtank(max_urls=50000):
+    print("\n[1/4] Downloading PhishTank dataset...")
+    urls = []
+    try:
+        # PhishTank verified phishing URLs (no key needed for basic CSV)
+        r = requests.get(
+            "http://data.phishtank.com/data/online-valid.csv",
+            timeout=60,
+            headers={"User-Agent": "FraudShield/1.0 research@fraudshield.com"}
+        )
+        if r.status_code == 200:
+            lines = r.text.strip().split("\n")[1:]  # Skip header
+            for line in lines[:max_urls]:
+                parts = line.split(",")
+                if len(parts) >= 2:
+                    url = parts[1].strip().strip('"')
+                    if url.startswith("http"):
+                        urls.append(url)
+            print(f"  ✅ PhishTank: {len(urls)} phishing URLs")
+        else:
+            print(f"  ⚠️ PhishTank returned {r.status_code}, using fallback...")
     except Exception as e:
-        print(f"   CSV load failed: {e}")
-
-    # Add hardcoded URLs
-    extra_count = 0
-    for url, label in SAFE_URLS + PHISHING_URLS:
-        try:
-            feats = get_features(url)
-            if feats:
-                rows.append(feats)
-                labels.append(label)
-                extra_count += 1
-        except Exception:
-            pass
-    print(f"   Hardcoded: {extra_count} extra samples added")
-
-    return np.array(rows), np.array(labels)
+        print(f"  ⚠️ PhishTank failed: {e}")
+    return urls
 
 
-def train():
-    print("\n" + "="*55)
-    print("  FraudShield ML Trainer v4.0 — High Accuracy")
-    print("="*55)
+def download_openphish(max_urls=10000):
+    print("[2/4] Downloading OpenPhish dataset...")
+    urls = []
+    try:
+        r = requests.get(
+            "https://openphish.com/feed.txt",
+            timeout=30,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+        if r.status_code == 200:
+            for line in r.text.strip().split("\n")[:max_urls]:
+                url = line.strip()
+                if url.startswith("http"):
+                    urls.append(url)
+            print(f"  ✅ OpenPhish: {len(urls)} phishing URLs")
+        else:
+            print(f"  ⚠️ OpenPhish returned {r.status_code}")
+    except Exception as e:
+        print(f"  ⚠️ OpenPhish failed: {e}")
+    return urls
 
+
+def download_tranco_legit(max_urls=50000):
+    print("[3/4] Downloading Tranco top legitimate domains...")
+    urls = []
+    try:
+        r = requests.get(
+            "https://tranco-list.eu/top-1m.csv.zip",
+            timeout=60,
+            stream=True
+        )
+        if r.status_code == 200:
+            import zipfile
+            import io
+            z = zipfile.ZipFile(io.BytesIO(r.content))
+            with z.open(z.namelist()[0]) as f:
+                lines = f.read().decode("utf-8").strip().split("\n")
+                for line in lines[:max_urls]:
+                    parts = line.split(",")
+                    if len(parts) >= 2:
+                        domain = parts[1].strip()
+                        urls.append(f"https://{domain}")
+            print(f"  ✅ Tranco: {len(urls)} legitimate URLs")
+        else:
+            print(f"  ⚠️ Tranco returned {r.status_code}, using fallback...")
+    except Exception as e:
+        print(f"  ⚠️ Tranco failed: {e}, using built-in list...")
+
+    # Fallback: built-in legitimate URLs if download fails
+    if len(urls) < 1000:
+        print("  📦 Using built-in legitimate domain list...")
+        legit_domains = [
+            "google.com", "youtube.com", "facebook.com", "twitter.com",
+            "instagram.com", "linkedin.com", "amazon.com", "microsoft.com",
+            "apple.com", "netflix.com", "reddit.com", "wikipedia.org",
+            "github.com", "stackoverflow.com", "paypal.com", "ebay.com",
+            "yahoo.com", "bing.com", "live.com", "outlook.com",
+            "dropbox.com", "adobe.com", "shopify.com", "wordpress.com",
+            "cloudflare.com", "digitalocean.com", "heroku.com", "vercel.com",
+            "notion.so", "figma.com", "canva.com", "slack.com", "zoom.us",
+            "spotify.com", "hulu.com", "disneyplus.com", "twitch.tv",
+            "discord.com", "telegram.org", "whatsapp.com", "messenger.com",
+            "nytimes.com", "bbc.com", "cnn.com", "reuters.com",
+            "theguardian.com", "forbes.com", "bloomberg.com", "wsj.com",
+            "coursera.org", "udemy.com", "edx.org", "khanacademy.org",
+            "booking.com", "airbnb.com", "expedia.com", "tripadvisor.com",
+            "walmart.com", "target.com", "bestbuy.com", "etsy.com",
+            "chase.com", "bankofamerica.com", "wellsfargo.com", "citibank.com",
+            "stripe.com", "coinbase.com", "robinhood.com", "visa.com",
+            "sbi.co.in", "hdfcbank.com", "icicibank.com", "axisbank.com",
+            "flipkart.com", "myntra.com", "swiggy.com", "zomato.com",
+            "paytm.com", "phonepe.com", "zerodha.com", "groww.in",
+            "ndtv.com", "timesofindia.com", "thehindu.com", "moneycontrol.com",
+            "github.io", "medium.com", "substack.com", "producthunt.com",
+        ]
+        # Generate varied URLs for each domain
+        paths = [
+            "", "/about", "/contact", "/login", "/home", "/products",
+            "/services", "/blog", "/help", "/support", "/faq",
+        ]
+        for domain in legit_domains:
+            for path in paths:
+                urls.append(f"https://{domain}{path}")
+        # Pad to 50000 with random combinations
+        while len(urls) < max_urls:
+            d = random.choice(legit_domains)
+            p = random.choice(paths)
+            urls.append(f"https://{d}{p}?ref={random.randint(1,999)}")
+        print(f"  ✅ Built-in list: {len(urls)} legitimate URLs")
+
+    return urls[:max_urls]
+
+
+def generate_synthetic_phishing(n=20000):
+    """Generate synthetic phishing URLs to supplement real data."""
+    print("[4/4] Generating synthetic phishing URLs...")
+    urls = []
+
+    sus_tlds    = [".tk", ".ml", ".ga", ".cf", ".gq", ".xyz", ".click", ".top", ".pw"]
+    brands      = ["paypal", "google", "amazon", "microsoft", "apple", "facebook",
+                   "netflix", "instagram", "twitter", "bankofamerica", "chase",
+                   "wellsfargo", "hdfc", "sbi", "icici"]
+    phish_words = ["login", "verify", "secure", "account", "update", "confirm",
+                   "suspended", "urgent", "billing", "password", "signin"]
+    legit_tlds  = [".com", ".net", ".org"]
+
+    for _ in range(n):
+        brand  = random.choice(brands)
+        word   = random.choice(phish_words)
+        tld    = random.choice(sus_tlds)
+        num    = random.randint(1, 999)
+        scheme = random.choice(["http://", "https://"])
+
+        pattern = random.randint(1, 6)
+        if pattern == 1:
+            url = f"{scheme}{brand}-{word}{tld}"
+        elif pattern == 2:
+            url = f"{scheme}{word}-{brand}{tld}/login.php"
+        elif pattern == 3:
+            url = f"{scheme}{brand}.{word}{tld}/verify"
+        elif pattern == 4:
+            url = f"{scheme}{num}.{brand}-secure{tld}/{word}"
+        elif pattern == 5:
+            url = f"{scheme}{brand}{word}{num}{tld}"
+        else:
+            url = f"http://{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}.{random.randint(1,255)}/{brand}/{word}"
+
+        urls.append(url)
+
+    print(f"  ✅ Synthetic: {len(urls)} phishing URLs generated")
+    return urls
+
+
+# ── Main training pipeline ────────────────────────────────────────────
+
+def main():
+    # 1. Download data
+    phish_real1 = download_phishtank(50000)
+    phish_real2 = download_openphish(10000)
+    legit_urls  = download_tranco_legit(50000)
+    phish_synth = generate_synthetic_phishing(20000)
+
+    all_phish = list(set(phish_real1 + phish_real2 + phish_synth))
+    all_legit = list(set(legit_urls))
+
+    print(f"\n📊 Dataset Summary:")
+    print(f"  Phishing URLs : {len(all_phish):,}")
+    print(f"  Legitimate URLs: {len(all_legit):,}")
+
+    # Balance dataset
+    min_size = min(len(all_phish), len(all_legit), 60000)
+    random.shuffle(all_phish)
+    random.shuffle(all_legit)
+    all_phish = all_phish[:min_size]
+    all_legit = all_legit[:min_size]
+
+    print(f"  Balanced to   : {min_size:,} each = {min_size*2:,} total")
+
+    # 2. Extract features
     print("\n⚙️  Extracting features...")
-    X, y = prepare_dataset()
-    print(f"   {X.shape[0]} total samples × {X.shape[1]} features")
-    print(f"   Safe: {(y==0).sum()} | Phishing: {(y==1).sum()}")
+    X, y = [], []
 
-    print("\n🔀 Splitting 80/20 (stratified)...")
+    print("  Processing phishing URLs...")
+    for url in tqdm(all_phish, ncols=70):
+        feats = extract_features(url)
+        if len(feats) == 28:
+            X.append(feats)
+            y.append(0)  # 0 = phishing
+
+    print("  Processing legitimate URLs...")
+    for url in tqdm(all_legit, ncols=70):
+        feats = extract_features(url)
+        if len(feats) == 28:
+            X.append(feats)
+            y.append(1)  # 1 = legitimate
+
+    X = np.array(X)
+    y = np.array(y)
+    print(f"  ✅ Feature matrix: {X.shape}")
+
+    # 3. Split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
+    # 4. Scale
     print("\n📐 Scaling features...")
-    scaler = StandardScaler()
+    scaler  = StandardScaler()
     X_train = scaler.fit_transform(X_train)
-    X_test = scaler.transform(X_test)
+    X_test  = scaler.transform(X_test)
 
-    print("\n🤖 Training Ensemble Model (3 classifiers)...")
-
-    gb = GradientBoostingClassifier(
-        n_estimators=500,
-        learning_rate=0.05,
-        max_depth=6,
-        subsample=0.8,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        random_state=42
-    )
+    # 5. Train ensemble model
+    print("\n🤖 Training ensemble model (this may take 2-5 minutes)...")
 
     rf = RandomForestClassifier(
-        n_estimators=500,
-        max_depth=None,
-        min_samples_split=2,
-        min_samples_leaf=1,
+        n_estimators=300,
+        max_depth=20,
+        min_samples_split=5,
+        min_samples_leaf=2,
         class_weight="balanced",
+        random_state=42,
+        n_jobs=-1
+    )
+
+    gb = GradientBoostingClassifier(
+        n_estimators=200,
+        max_depth=6,
+        learning_rate=0.1,
         random_state=42
     )
 
-    et = ExtraTreesClassifier(
-        n_estimators=500,
-        max_depth=None,
-        min_samples_split=2,
+    lr = LogisticRegression(
+        C=1.0,
+        max_iter=1000,
         class_weight="balanced",
         random_state=42
     )
 
     ensemble = VotingClassifier(
-        estimators=[("gb", gb), ("rf", rf), ("et", et)],
+        estimators=[("rf", rf), ("gb", gb), ("lr", lr)],
         voting="soft",
-        weights=[3, 2, 2]
+        weights=[3, 2, 1]
     )
 
     ensemble.fit(X_train, y_train)
+    print("  ✅ Model trained!")
 
-    print("\n📈 Evaluating on test set...")
+    # 6. Evaluate
+    print("\n📈 Evaluation Results:")
     y_pred = ensemble.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print(f"\n   ✅ Test Accuracy:  {acc:.2%}")
+    y_prob = ensemble.predict_proba(X_test)[:, 1]
 
-    print("\n📊 Cross-Validation (5-fold)...")
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    print(classification_report(y_test, y_pred,
+          target_names=["Phishing", "Legitimate"]))
 
-    # Scale full dataset for CV
-    scaler_full = StandardScaler()
-    X_scaled = scaler_full.fit_transform(X)
+    cm  = confusion_matrix(y_test, y_pred)
+    auc = roc_auc_score(y_test, y_prob)
+    print(f"  Confusion Matrix:\n{cm}")
+    print(f"  ROC-AUC Score: {auc:.4f}")
 
-    cv_scores = cross_val_score(ensemble, X_scaled, y, cv=skf, scoring="accuracy")
-    print(f"   CV Mean:  {cv_scores.mean():.2%} ± {cv_scores.std():.2%}")
-    print(f"   CV Scores: {[f'{s:.2%}' for s in cv_scores]}")
+    acc = ensemble.score(X_test, y_test)
+    print(f"  Accuracy: {acc*100:.2f}%")
 
-    print("\n" + classification_report(y_test, y_pred, target_names=["Safe", "Phishing"]))
-
-    cm = confusion_matrix(y_test, y_pred)
-    print(f"   Confusion Matrix:")
-    print(f"   True  Safe:  {cm[0][0]} | False Phish: {cm[0][1]}")
-    print(f"   False Safe:  {cm[1][0]} | True  Phish: {cm[1][1]}")
-
-    print("\n💾 Saving model & scaler...")
+    # 7. Save models
+    print("\n💾 Saving models...")
     joblib.dump(ensemble, "fraud_model.pkl")
     joblib.dump(scaler,   "scaler.pkl")
-    print("   ✅ fraud_model.pkl saved")
-    print("   ✅ scaler.pkl saved")
-    print(f"\n🎉 Done! Final Accuracy: {acc:.2%}\n")
+    print("  ✅ fraud_model.pkl saved")
+    print("  ✅ scaler.pkl saved")
+
+    # 8. Quick test
+    print("\n🧪 Quick sanity test:")
+    test_cases = [
+        ("https://google.com",              "Legitimate"),
+        ("https://paypal.com/login",        "Legitimate"),
+        ("http://paypal-verify.tk/login",   "Phishing"),
+        ("http://secure-login-amazon.ml",   "Phishing"),
+        ("http://192.168.1.1/banking",      "Phishing"),
+        ("https://github.com",              "Legitimate"),
+        ("http://test-phishing-site.tk",    "Phishing"),
+        ("https://netflix.com",             "Legitimate"),
+    ]
+
+    for url, expected in test_cases:
+        feats  = extract_features(url)
+        scaled = scaler.transform([feats])
+        prob   = ensemble.predict_proba(scaled)[0]
+        score  = int(prob[1] * 100)
+        result = "✅ Legitimate" if score >= 65 else "🚨 Phishing"
+        match  = "✓" if (score >= 65) == (expected == "Legitimate") else "✗"
+        print(f"  {match} {url[:50]:<50} Score: {score:3d} → {result}")
+
+    print("\n" + "=" * 60)
+    print("  ✅ Training complete! Models saved.")
+    print("  Next: push fraud_model.pkl + scaler.pkl to GitHub")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
-    train()
+    main()
