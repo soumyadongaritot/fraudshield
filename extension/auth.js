@@ -2,8 +2,8 @@
 const SUPABASE_URL = "https://bgfztnukkgcakeogpvdi.supabase.co";
 const SUPABASE_KEY = "sb_publishable_w9J9v84ef_Ag0Igc8jJkxw_f0YJYJ5c";
 
-const AUTH_URL  = `${SUPABASE_URL}/auth/v1`;
-const DB_URL    = `${SUPABASE_URL}/rest/v1`;
+const AUTH_URL = `${SUPABASE_URL}/auth/v1`;
+const DB_URL   = `${SUPABASE_URL}/rest/v1`;
 
 // ── Auth functions ────────────────────────────────────────────────────
 
@@ -28,7 +28,6 @@ async function signIn(email, password) {
   if (data.error || data.error_description) {
     throw new Error(data.error_description || data.error || "Login failed");
   }
-  // Save session
   await chrome.storage.local.set({
     sb_access_token:  data.access_token,
     sb_refresh_token: data.refresh_token,
@@ -84,7 +83,6 @@ async function saveScanToCloud(entry, accessToken) {
   try {
     const { sb_user } = await chrome.storage.local.get("sb_user");
     if (!sb_user) return;
-
     await fetch(`${DB_URL}/scan_history`, {
       method: "POST",
       headers: {
@@ -137,3 +135,148 @@ async function fetchCloudHistory(accessToken) {
     return [];
   }
 }
+
+// ── UI rendering ──────────────────────────────────────────────────────
+
+function renderAuthScreen() {
+  document.getElementById("app").innerHTML = `
+    <div class="auth-container">
+      <div class="auth-logo">
+        <span class="fraud">Fraud</span><span class="shield">Shield</span>
+        <span class="version">v3.1</span>
+      </div>
+      <div class="auth-subtitle">AI-powered fraud &amp; phishing detection</div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin">Login</button>
+        <button class="auth-tab" id="tabSignup">Sign Up</button>
+      </div>
+
+      <div class="auth-form">
+        <div id="authError" class="auth-error" style="display:none"></div>
+        <input class="auth-input" id="authEmail"    type="email"    placeholder="Email address" autocomplete="email"/>
+        <input class="auth-input" id="authPassword" type="password" placeholder="Password" autocomplete="current-password"/>
+        <button class="auth-btn" id="authSubmitBtn">Login</button>
+      </div>
+
+      <div class="auth-footer">🔒 Your data is encrypted &amp; private</div>
+    </div>`;
+
+  let mode = "login";
+
+  document.getElementById("tabLogin").addEventListener("click", () => {
+    mode = "login";
+    document.getElementById("tabLogin").classList.add("active");
+    document.getElementById("tabSignup").classList.remove("active");
+    document.getElementById("authSubmitBtn").textContent = "Login";
+    document.getElementById("authError").style.display = "none";
+  });
+
+  document.getElementById("tabSignup").addEventListener("click", () => {
+    mode = "signup";
+    document.getElementById("tabSignup").classList.add("active");
+    document.getElementById("tabLogin").classList.remove("active");
+    document.getElementById("authSubmitBtn").textContent = "Create Account";
+    document.getElementById("authError").style.display = "none";
+  });
+
+  document.getElementById("authSubmitBtn").addEventListener("click", async () => {
+    const email    = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const errEl    = document.getElementById("authError");
+    const btn      = document.getElementById("authSubmitBtn");
+
+    errEl.style.display = "none";
+    if (!email || !password) {
+      errEl.style.color = "#ff3d5a";
+      errEl.textContent = "Please enter your email and password.";
+      errEl.style.display = "block";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = mode === "login" ? "Logging in…" : "Creating account…";
+
+    try {
+      if (mode === "signup") {
+        await signUp(email, password);
+        errEl.style.color = "#00d4aa";
+        errEl.textContent = "Account created! Check your email to confirm, then log in.";
+        errEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Create Account";
+      } else {
+        const data = await signIn(email, password);
+        renderMainApp(data.user);
+      }
+    } catch (err) {
+      errEl.style.color = "#ff3d5a";
+      errEl.textContent = err.message || "Authentication failed.";
+      errEl.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = mode === "login" ? "Login" : "Create Account";
+    }
+  });
+}
+
+function renderMainApp(user) {
+  const email = user?.email || "";
+  document.getElementById("app").innerHTML = `
+    <div class="header">
+      <div class="logo">
+        <span class="fraud">Fraud</span><span class="shield">Shield</span>
+        <span class="badge">v3.1 AI</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="historyBtn" title="History">🕓</button>
+      </div>
+    </div>
+
+    <div class="user-bar">
+      <span class="user-email">${email}</span>
+      <button class="signout-btn" id="signoutBtn">Sign Out</button>
+    </div>
+
+    <div class="url-bar" id="urlDisplay">Loading…</div>
+
+    <div id="content">
+      <div class="loading"><div class="spinner"></div>Analyzing with AI…</div>
+    </div>
+
+    <div class="scan-time-bar">
+      <span>Last scan: <span id="scanTime">—</span></span>
+      <span>FraudShield AI</span>
+    </div>
+
+    <div class="action-bar">
+      <button class="scan-btn" id="scanBtn">🔍 SCAN THIS PAGE</button>
+    </div>
+
+    <div class="export-bar">
+      <button class="export-btn" id="exportCSVBtn">⬇ Export CSV</button>
+      <button class="export-btn" id="exportPDFBtn">⬇ Export PDF</button>
+    </div>`;
+
+  document.getElementById("signoutBtn").addEventListener("click", async () => {
+    await signOut();
+    renderAuthScreen();
+  });
+
+  // All DOM elements now exist — safe to initialise popup.js logic
+  window.initMainApp();
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────
+
+document.addEventListener("DOMContentLoaded", async () => {
+  let session = await getSession();
+  if (!session) {
+    const refreshed = await refreshSession();
+    if (refreshed) session = await getSession();
+  }
+  if (session) {
+    renderMainApp(session.user);
+  } else {
+    renderAuthScreen();
+  }
+});
