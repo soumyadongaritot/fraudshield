@@ -12,7 +12,7 @@
   ],
   "host_permissions": [
     "<all_urls>",
-    "https://fraudshield-2u9l.onrender.com/*",
+    "https://fraudshield-1-pkvb.onrender.com/*",
     "https://bgfztnukkgcakeogpvdi.supabase.co/*"
   ],
   "background": {
@@ -39,6 +39,6 @@
     "128": "icons/icon128.png"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-2u9l.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co;"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co;"
   }
 }
