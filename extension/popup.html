@@ -128,7 +128,6 @@
       border: 1px solid #ff3d5a30;
     }
 
-    .auth-forgot { text-align: center; margin-top: 12px; }
     .auth-footer {
       margin-top: auto;
       padding-top: 20px;
@@ -157,20 +156,6 @@
       padding: 2px 7px;
       margin-left: 5px;
     }
-
-    .header-actions { display: flex; gap: 6px; }
-
-    .icon-btn {
-      background: #111827;
-      border: 1px solid #1e2d45;
-      border-radius: 6px;
-      color: #e0e6f0;
-      padding: 5px 8px;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-    .icon-btn:hover { border-color: #00d4aa; }
 
     /* ── User bar ── */
     .user-bar {
@@ -203,29 +188,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    /* ── Live scan log ── */
-    #liveScanLog {
-      display: none;
-      background: #080c18;
-      border-bottom: 1px solid #1a2035;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
-    .log-row {
-      display: flex;
-      align-items: center;
-      padding: 6px 14px;
-      border-bottom: 1px solid #0d1525;
-      gap: 10px;
-    }
-
-    .log-score { font-size: 13px; font-weight: 700; min-width: 28px; }
-    .log-info  { flex: 1; min-width: 0; }
-    .log-domain { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .log-time   { font-size: 9px; color: #3a4a5c; margin-top: 1px; }
-    .log-dot    { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
     /* ── Content ── */
     #content { padding: 10px 14px; }
@@ -346,7 +308,7 @@
     .flag-item { font-size: 11px; padding: 4px 0; border-bottom: 1px solid #0a0e1a; line-height: 1.4; }
     .flag-item:last-child { border-bottom: none; }
 
-    /* ── Bottom bars ── */
+    /* ── Scan time bar ── */
     .scan-time-bar {
       padding: 6px 14px;
       color: #3a4a5c;
@@ -356,6 +318,7 @@
       border-top: 1px solid #0d1525;
     }
 
+    /* ── Scan button ── */
     .action-bar { padding: 0 14px 8px; }
     .scan-btn {
       width: 100%;
@@ -374,6 +337,103 @@
     .scan-btn:hover    { background: linear-gradient(135deg, #0d2540, #0d3045); }
     .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* ── History table section ── */
+    .history-table-section {
+      margin: 0 14px 8px;
+      background: #0d1525;
+      border: 1px solid #1a2035;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .htable-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1a2035;
+    }
+
+    .htable-title {
+      font-size: 10px;
+      color: #3a4a5c;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .htable-count {
+      font-size: 9px;
+      color: #00d4aa;
+    }
+
+    .htable-empty {
+      padding: 14px 10px;
+      font-size: 10px;
+      color: #3a4a5c;
+      text-align: center;
+    }
+
+    .htable-wrap {
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .htable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+    }
+
+    .htable thead th {
+      padding: 5px 8px;
+      color: #3a4a5c;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      border-bottom: 1px solid #1a2035;
+      text-align: left;
+      background: #080c18;
+    }
+
+    .htable-row td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #0a0e1a;
+      vertical-align: middle;
+    }
+
+    .htable-row:last-child td { border-bottom: none; }
+    .htable-row:hover td { background: #111827; }
+
+    .htable-score {
+      font-weight: 700;
+      font-size: 11px;
+      min-width: 28px;
+    }
+
+    .htable-domain {
+      color: #8899aa;
+      max-width: 120px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .htable-badge {
+      font-size: 8px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .htable-time {
+      color: #3a4a5c;
+      font-size: 9px;
+      white-space: nowrap;
+    }
+
+    /* ── Export bar ── */
     .export-bar { display: flex; gap: 8px; padding: 0 14px 12px; }
     .export-btn {
       flex: 1;

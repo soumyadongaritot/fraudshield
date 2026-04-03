@@ -143,7 +143,7 @@ function renderAuthScreen() {
     <div class="auth-container">
       <div class="auth-logo">
         <span class="fraud">Fraud</span><span class="shield">Shield</span>
-        <span class="version">v3.1</span>
+        <span class="version">v4.1</span>
       </div>
       <div class="auth-subtitle">AI-powered fraud &amp; phishing detection</div>
 
@@ -225,10 +225,7 @@ function renderMainApp(user) {
     <div class="header">
       <div class="logo">
         <span class="fraud">Fraud</span><span class="shield">Shield</span>
-        <span class="badge">v3.1 AI</span>
-      </div>
-      <div class="header-actions">
-        <button class="icon-btn" id="historyBtn" title="History">🕓</button>
+        <span class="badge">v4.1 AI</span>
       </div>
     </div>
 
@@ -252,6 +249,8 @@ function renderMainApp(user) {
       <button class="scan-btn" id="scanBtn">🔍 SCAN THIS PAGE</button>
     </div>
 
+    <div id="historyTableSection" class="history-table-section"></div>
+
     <div class="export-bar">
       <button class="export-btn" id="exportCSVBtn">⬇ Export CSV</button>
       <button class="export-btn" id="exportPDFBtn">⬇ Export PDF</button>
@@ -262,7 +261,7 @@ function renderMainApp(user) {
     renderAuthScreen();
   });
 
-  // All DOM elements now exist — safe to initialise popup.js logic
+  // All DOM elements exist — hand off to popup.js
   window.initMainApp();
 }
 
