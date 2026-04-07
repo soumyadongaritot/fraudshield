@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FraudShield - AI Fraud Detector",
-  "version": "4.0.0",
-  "description": "Real-time AI-powered fraud website detection with cloud sync",
+  "version": "4.2.0",
+  "description": "Real-time AI-powered fraud & phishing detection with proactive warnings",
   "permissions": [
     "activeTab",
     "tabs",
@@ -20,9 +20,9 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "js": ["content.js"],
-      "run_at": "document_start"
+      "run_at": "document_idle"
     }
   ],
   "action": {

@@ -1,83 +1,90 @@
-// FraudShield v4.0 — Background Service Worker
+// background.js - FraudShield v4.2
+const API_URL = "https://fraudshield-1-pkvb.onrender.com";
 
-const API_URL = "https://fraudshield-2u9l.onrender.com";
+// ── FIX 3: Badge update listener ──────────────────────────────────────
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === "UPDATE_BADGE") {
+    const score = msg.score ?? 50;
+    const color =
+      score >= 85 ? "#00ff88" :
+      score >= 65 ? "#00d4aa" :
+      score >= 45 ? "#ffd600" :
+      score >= 25 ? "#ff8800" : "#ff3d5a";
 
-function getBadgeColor(score) {
-  if (score >= 85) return "#00ff88";
-  if (score >= 65) return "#ffcc00";
-  if (score >= 45) return "#ff8800";
-  return "#ff4444";
-}
-
-function sendNotification(result, url) {
-  const score  = result.safety_score;
-  const domain = result.domain_info?.domain || new URL(url).hostname;
-  let title, message;
-
-  if (score < 25) {
-    title   = "🔴 MALICIOUS PAGE DETECTED";
-    message = `${domain} is DANGEROUS! Do not enter any information.`;
-  } else if (score < 45) {
-    title   = "🚨 Likely Phishing Detected";
-    message = `${domain} looks like a phishing site! (Score: ${score}/100)`;
-  } else if (score < 65) {
-    title   = "⚠️ Suspicious Page";
-    message = `${domain} has risk factors. Proceed with caution. (Score: ${score}/100)`;
-  } else {
-    return;
+    chrome.action.setBadgeText({ text: String(score) });
+    chrome.action.setBadgeBackgroundColor({ color });
   }
 
-  chrome.notifications.create({
-    type:     "basic",
-    iconUrl:  "icons/icon128.png",
-    title:    title,
-    message:  message,
-    priority: score < 45 ? 2 : 1
-  });
-}
+  // ── FIX 4: Proactive warning from content script ──────────────────
+  if (msg.type === "PROACTIVE_SCAN") {
+    const { url } = msg;
+    const tabId = sender?.tab?.id;
+    fetch(`${API_URL}/check`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const score = data.safety_score ?? 50;
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      // Update badge
+      const color =
+        score >= 85 ? "#00ff88" :
+        score >= 65 ? "#00d4aa" :
+        score >= 45 ? "#ffd600" :
+        score >= 25 ? "#ff8800" : "#ff3d5a";
+      chrome.action.setBadgeText({ text: String(score), tabId });
+      chrome.action.setBadgeBackgroundColor({ color, tabId });
 
-  if (message.type === "SCAN_COMPLETE") {
-    const { result, url, tabId } = message;
-    const score = result.safety_score;
+      // Show notification only for dangerous sites (score < 45)
+      if (score < 45) {
+        const riskLabel =
+          score >= 25 ? "⚠️ LIKELY PHISHING" : "🔴 MALICIOUS SITE";
 
-    if (tabId) {
-      chrome.action.setBadgeText({ text: score < 85 ? "!" : "", tabId });
-      chrome.action.setBadgeBackgroundColor({ color: getBadgeColor(score), tabId });
-    }
-
-    if (score < 65) sendNotification(result, url);
-    sendResponse({ ok: true });
-  }
-
-  if (message.type === "UPDATE_BADGE") {
-    const tabId = sender.tab?.id;
-    if (!tabId) return;
-    chrome.action.setBadgeText({ text: message.score < 85 ? "!" : "", tabId });
-    chrome.action.setBadgeBackgroundColor({ color: getBadgeColor(message.score), tabId });
-  }
-
-  if (message.type === "DOWNLOAD_CSV") {
-    chrome.downloads.download({
-      url:            message.url,
-      filename:       message.filename || "fraudshield-scans.csv",
-      saveAs:         false,
-      conflictAction: "overwrite"
-    }, (downloadId) => {
-      if (chrome.runtime.lastError) {
-        console.warn("CSV download error:", chrome.runtime.lastError.message);
+        chrome.notifications.create({
+          type: "basic",
+          iconUrl: "icons/icon128.png",
+          title: `FraudShield Warning — ${riskLabel}`,
+          message: `This site scored ${score}/100. Do NOT enter personal information here.\n${url}`,
+          priority: 2
+        });
       }
-    });
-    sendResponse({ ok: true });
-  }
 
-  return true;
+      // Save to history
+      chrome.storage.local.get("scanHistory", (result) => {
+        const history = result.scanHistory || [];
+        const now = Date.now();
+        const recentDupe = history.find(h =>
+          h.url === url && (now - new Date(h.timestamp).getTime()) < 60000
+        );
+        if (!recentDupe) {
+          history.push({
+            url,
+            score: data.safety_score,
+            category: data.category,
+            risk: data.risk_level,
+            site_type: data.domain_info?.site_type ?? "Unknown",
+            domain: data.domain_info?.domain ?? "",
+            protocol: data.domain_info?.protocol ?? "",
+            timestamp: new Date().toISOString()
+          });
+          if (history.length > 200) history.shift();
+          chrome.storage.local.set({ scanHistory: history });
+        }
+      });
+    })
+    .catch(() => {
+      // Backend asleep — set grey badge, no warning
+      chrome.action.setBadgeText({ text: "...", tabId });
+      chrome.action.setBadgeBackgroundColor({ color: "#3a4a5c", tabId });
+    });
+  }
 });
 
+// Clear badge when tab navigates away
 chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.status === "loading") {
     chrome.action.setBadgeText({ text: "", tabId });
-    chrome.storage.local.remove(String(tabId));
   }
 });

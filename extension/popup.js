@@ -1,4 +1,4 @@
-// popup.js - FraudShield v4.1
+// popup.js - FraudShield v4.2
 const API_URL = "https://fraudshield-1-pkvb.onrender.com";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
@@ -58,6 +58,13 @@ async function requestScan() {
     const data = await res.json();
     document.getElementById("scanTime").textContent = new Date().toLocaleTimeString();
     showResult(data);
+
+    // Update Chrome badge with score
+    chrome.runtime.sendMessage({
+      type: "UPDATE_BADGE",
+      score: data.safety_score ?? 50
+    });
+
     saveToHistory(data, url, () => renderHistoryTable());
   } catch (err) {
     showError("⚠️ Backend unreachable after 3 attempts.\nThe server may still be waking up.\nPlease wait 30 seconds and click Scan again.");
@@ -78,10 +85,25 @@ function showError(msg) {
 function saveToHistory(data, url, callback) {
   chrome.storage.local.get("scanHistory", (result) => {
     const history = result.scanHistory || [];
+
+    // ── FIX 1: Deduplicate — skip if same URL scanned in last 60 seconds ──
+    const now = Date.now();
+    const recentDupe = history.find(h =>
+      h.url === url && (now - new Date(h.timestamp).getTime()) < 60000
+    );
+    if (recentDupe) {
+      if (callback) callback();
+      return;
+    }
+
     history.push({
-      url, score: data.safety_score, category: data.category, risk: data.risk_level,
+      url,
+      score: data.safety_score,
+      category: data.category,
+      risk: data.risk_level,
       site_type: data.domain_info?.site_type ?? "Unknown",
-      domain: data.domain_info?.domain ?? "", protocol: data.domain_info?.protocol ?? "",
+      domain: data.domain_info?.domain ?? "",
+      protocol: data.domain_info?.protocol ?? "",
       timestamp: new Date().toISOString()
     });
     if (history.length > 200) history.shift();
@@ -91,7 +113,20 @@ function saveToHistory(data, url, callback) {
   });
 }
 
-// ── Inline history table ───────────────────────────────
+// ── Score helpers (consistent everywhere) ─────────────────────────────
+function scoreColor(s) {
+  return s >= 85 ? "#00ff88" : s >= 65 ? "#00d4aa" : s >= 45 ? "#ffd600" : s >= 25 ? "#ff8800" : "#ff3d5a";
+}
+
+// ── FIX 2: Consistent status labels (65-84 = PROBABLY SAFE, not OK) ──
+function scoreLabel(s) {
+  return s >= 85 ? "SAFE" :
+         s >= 65 ? "PROB SAFE" :
+         s >= 45 ? "SUSP" :
+         s >= 25 ? "PHISH" : "MAL";
+}
+
+// ── Inline history table ───────────────────────────────────────────────
 function renderHistoryTable() {
   chrome.storage.local.get("scanHistory", (result) => {
     const history = (result.scanHistory || []).slice().reverse().slice(0, 20);
@@ -110,8 +145,8 @@ function renderHistoryTable() {
 
     const rows = history.map(e => {
       const s = e.score ?? 0;
-      const color = s >= 85 ? "#00ff88" : s >= 65 ? "#00d4aa" : s >= 45 ? "#ffd600" : s >= 25 ? "#ff8800" : "#ff3d5a";
-      const label = s >= 85 ? "SAFE" : s >= 65 ? "OK" : s >= 45 ? "SUSP" : s >= 25 ? "PHISH" : "MAL";
+      const color = scoreColor(s);
+      const label = scoreLabel(s);
       const domain = e.domain || tryGetHostname(e.url);
       const time = new Date(e.timestamp).toLocaleString([], {
         month: "short", day: "numeric",
@@ -135,10 +170,7 @@ function renderHistoryTable() {
         <table class="htable">
           <thead>
             <tr>
-              <th>Score</th>
-              <th>Domain</th>
-              <th>Status</th>
-              <th>Time</th>
+              <th>Score</th><th>Domain</th><th>Status</th><th>Time</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -151,7 +183,7 @@ function tryGetHostname(url) {
   try { return new URL(url).hostname; } catch { return url || "unknown"; }
 }
 
-// ── Export CSV ─────────────────────────────────────────
+// ── Export CSV ─────────────────────────────────────────────────────────
 function exportCSV(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
   const headers = ["URL", "Safety Score", "Category", "Risk Level", "Date & Time"];
@@ -166,7 +198,7 @@ function exportCSV(history) {
   a.click();
 }
 
-// ── Export PDF ─────────────────────────────────────────
+// ── Export PDF ─────────────────────────────────────────────────────────
 function exportPDF(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
   const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -180,17 +212,18 @@ function exportPDF(history) {
   table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f5f5f5;padding:10px 12px;text-align:left;border-bottom:2px solid #e0e0e0}
   td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:top}.url-cell{max-width:280px;word-break:break-all;color:#1a5fa8;font-size:12px}
   tr:nth-child(even) td{background:#fafafa}.footer{margin-top:24px;text-align:center;color:#aaa;font-size:12px}</style></head>
-  <body><div class="brand">FraudShield <span style="font-size:14px;color:#888">v4.1 AI</span></div>
+  <body><div class="brand">FraudShield <span style="font-size:14px;color:#888">v4.2 AI</span></div>
   <p style="color:#666;margin:4px 0 16px">Scan History — Generated: ${new Date().toLocaleString()} | Total: ${history.length}</p>
   <table><thead><tr><th>#</th><th>URL</th><th>Score</th><th>Category</th><th>Risk</th><th>Date</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div class="footer">FraudShield v4.1 — AI Fraud Detection</div></body></html>`;
+  <div class="footer">FraudShield v4.2 — AI Fraud Detection</div></body></html>`;
   const win = window.open("", "_blank");
   win.document.write(html);
   win.document.close();
   setTimeout(() => win.print(), 500);
 }
 
+// ── Show result ────────────────────────────────────────────────────────
 function showResult(data) {
   const score = data.safety_score ?? 50;
   const flags = data.flags ?? [];
@@ -199,22 +232,25 @@ function showResult(data) {
   const domainInfo = data.domain_info ?? {};
   const age = domainInfo.age ?? {};
 
-  let color, statusLabel, statusDesc, catStyle, riskStyle;
+  const color = scoreColor(score);
+
+  // ── FIX 2: Consistent labels and descriptions ──
+  let statusLabel, statusDesc, catStyle, riskStyle;
   if (score >= 85) {
-    color = "#00ff88"; statusLabel = "✅ SAFE"; statusDesc = "No threats detected. Site appears legitimate.";
-    catStyle = "background:#00ff8815;color:#00ff88;border:1px solid #00ff8830"; riskStyle = "background:#00ff8815;color:#00ff88;";
+    statusLabel = "✅ SAFE"; statusDesc = "No threats detected. Site appears legitimate.";
+    catStyle = `background:#00ff8815;color:#00ff88;border:1px solid #00ff8830`; riskStyle = `background:#00ff8815;color:#00ff88;`;
   } else if (score >= 65) {
-    color = "#00d4aa"; statusLabel = "✅ PROBABLY SAFE"; statusDesc = "Low risk. Appears mostly legitimate.";
-    catStyle = "background:#00d4aa15;color:#00d4aa;border:1px solid #00d4aa30"; riskStyle = "background:#00d4aa15;color:#00d4aa;";
+    statusLabel = "✅ PROBABLY SAFE"; statusDesc = "Low risk. Appears mostly legitimate.";
+    catStyle = `background:#00d4aa15;color:#00d4aa;border:1px solid #00d4aa30`; riskStyle = `background:#00d4aa15;color:#00d4aa;`;
   } else if (score >= 45) {
-    color = "#ffd600"; statusLabel = "⚠️ SUSPICIOUS"; statusDesc = "Risk factors found. Proceed with caution.";
-    catStyle = "background:#ffd60015;color:#ffd600;border:1px solid #ffd60030"; riskStyle = "background:#ffd60015;color:#ffd600;";
+    statusLabel = "⚠️ SUSPICIOUS"; statusDesc = "Risk factors found. Proceed with caution.";
+    catStyle = `background:#ffd60015;color:#ffd600;border:1px solid #ffd60030`; riskStyle = `background:#ffd60015;color:#ffd600;`;
   } else if (score >= 25) {
-    color = "#ff8800"; statusLabel = "🚨 LIKELY PHISHING"; statusDesc = "High risk! This may be a phishing attempt.";
-    catStyle = "background:#ff880015;color:#ff8800;border:1px solid #ff880030"; riskStyle = "background:#ff880015;color:#ff8800;";
+    statusLabel = "🚨 LIKELY PHISHING"; statusDesc = "High risk! This may be a phishing attempt.";
+    catStyle = `background:#ff880015;color:#ff8800;border:1px solid #ff880030`; riskStyle = `background:#ff880015;color:#ff8800;`;
   } else {
-    color = "#ff3d5a"; statusLabel = "🔴 MALICIOUS"; statusDesc = "DANGER! Do not enter any information here.";
-    catStyle = "background:#ff3d5a15;color:#ff3d5a;border:1px solid #ff3d5a30"; riskStyle = "background:#ff3d5a15;color:#ff3d5a;";
+    statusLabel = "🔴 MALICIOUS"; statusDesc = "DANGER! Do not enter any information here.";
+    catStyle = `background:#ff3d5a15;color:#ff3d5a;border:1px solid #ff3d5a30`; riskStyle = `background:#ff3d5a15;color:#ff3d5a;`;
   }
 
   const circumference = 2 * Math.PI * 36;
