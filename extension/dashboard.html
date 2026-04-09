@@ -20,8 +20,6 @@
   --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden}
-
-/* ── LOGIN ── */
 #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;overflow:hidden}
 .login-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(0,212,170,0.08) 0%,transparent 70%)}
 .login-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.4}
@@ -44,12 +42,8 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .login-err{color:var(--red);font-size:13px;margin-top:8px;display:none}
 .login-hint{text-align:center;font-size:12px;color:var(--text3);margin-top:20px}
 .login-hint span{color:var(--accent);cursor:pointer}
-
-/* ── APP SHELL ── */
 #app{display:none;min-height:100vh;flex-direction:column}
 #app.visible{display:flex}
-
-/* ── TOPBAR ── */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:var(--bg2);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:100}
 .tb-left{display:flex;align-items:center;gap:16px}
 .tb-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:800;letter-spacing:-.4px}
@@ -68,8 +62,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .tb-username{font-size:13px;font-weight:500}
 .tb-logout{font-size:12px;color:var(--text3);cursor:pointer;padding:6px 10px;border-radius:6px;transition:color .2s}
 .tb-logout:hover{color:var(--red)}
-
-/* ── LAYOUT ── */
 .app-body{display:flex;flex:1}
 .sidebar{width:220px;background:var(--bg2);border-right:.5px solid var(--border);padding:20px 0;flex-shrink:0;position:sticky;top:60px;height:calc(100vh - 60px);overflow-y:auto}
 .sidebar-section{margin-bottom:24px}
@@ -80,8 +72,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .nav-item svg{width:15px;height:15px;flex-shrink:0}
 .nav-badge{margin-left:auto;font-size:10px;font-weight:600;background:var(--red);color:#fff;padding:1px 6px;border-radius:10px;font-family:var(--mono)}
 .nav-badge.green{background:var(--accent);color:#000}
-
-/* ── MAIN ── */
 .main{flex:1;padding:28px;overflow-y:auto;background:var(--bg);min-height:calc(100vh - 60px)}
 .page{display:none}
 .page.active{display:block;animation:fadeIn .25s}
@@ -89,8 +79,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .page-header{margin-bottom:24px}
 .page-title{font-size:22px;font-weight:800;letter-spacing:-.5px}
 .page-sub{font-size:13px;color:var(--text2);margin-top:4px}
-
-/* ── STAT CARDS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 .stat-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s}
 .stat-card:hover{border-color:var(--border2)}
@@ -106,8 +94,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .stat-card.warn   .stat-glow{background:var(--amber)}
 .stat-card.safe   .stat-glow{background:var(--accent)}
 .stat-card.info   .stat-glow{background:var(--blue)}
-
-/* ── CHARTS ── */
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
 .chart-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:20px}
 .chart-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:16px}
@@ -119,8 +105,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .donut-legend{display:flex;flex-direction:column;gap:8px}
 .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-/* ── SCAN BOX ── */
 .scan-box{background:var(--bg2);border:.5px solid var(--border2);border-radius:16px;padding:24px;margin-bottom:24px}
 .scan-box-title{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)}
 .scan-input-row{display:flex;gap:10px}
@@ -144,8 +128,6 @@ html,body{min-height:100vh;font-family:var(--font);background:var(--bg);color:va
 .btn-blocklist{background:var(--red-bg);color:var(--red);border-color:var(--red)}
 .btn-allowlist:hover{background:var(--accent);color:#000}
 .btn-blocklist:hover{background:var(--red);color:#fff}
-
-/* ── TABLES ── */
 .table-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
 .table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:.5px solid var(--border)}
 .table-title{font-size:13px;font-weight:600}
@@ -169,8 +151,6 @@ tr:hover td{background:var(--bg3)}
 .del-btn{padding:4px 10px;font-size:11px;border-radius:6px;border:.5px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all .15s;font-family:var(--font)}
 .del-btn:hover{color:var(--red);border-color:var(--red)}
 .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px}
-
-/* ── LISTS ── */
 .list-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .list-panel{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;overflow:hidden}
 .list-panel-header{padding:14px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:8px}
@@ -190,8 +170,6 @@ tr:hover td{background:var(--bg3)}
 .btn-add.green{background:var(--accent);color:#000}
 .btn-add.red  {background:var(--red);   color:#fff}
 .btn-add:hover{opacity:.85}
-
-/* ── SETTINGS ── */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .settings-card{background:var(--bg2);border:.5px solid var(--border);border-radius:14px;padding:22px}
 .settings-card-title{font-size:14px;font-weight:600;margin-bottom:18px;padding-bottom:12px;border-bottom:.5px solid var(--border)}
@@ -211,8 +189,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
 .report-textarea{padding:10px 14px;background:var(--bg3);border:.5px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;resize:vertical;min-height:70px}
 .btn-report{padding:9px 16px;background:var(--bg3);border:.5px solid var(--border2);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:left}
 .btn-report:hover{border-color:var(--accent);color:var(--accent)}
-
-/* ── TOAST ── */
 #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
 #toast.show{opacity:1;transform:translateY(0)}
 #toast.success{background:var(--bg2);border:.5px solid var(--accent);color:var(--accent)}
@@ -222,7 +198,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
 </head>
 <body>
 
-<!-- ══════════════ LOGIN ══════════════ -->
 <div id="login-screen">
   <div class="login-bg"></div>
   <div class="login-grid"></div>
@@ -252,10 +227,7 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
 <div id="app">
-
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="tb-left">
       <div class="tb-logo">
@@ -281,7 +253,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
   </div>
 
   <div class="app-body">
-    <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-label">Overview</div>
@@ -320,10 +291,7 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
       </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main">
-
-      <!-- ── DASHBOARD ── -->
       <div class="page active" id="page-dashboard">
         <div class="page-header">
           <div class="page-title">Security Dashboard</div>
@@ -367,7 +335,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-      <!-- ── URL SCANNER ── -->
       <div class="page" id="page-scanner">
         <div class="page-header">
           <div class="page-title">URL Scanner</div>
@@ -396,7 +363,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-      <!-- ── HISTORY ── -->
       <div class="page" id="page-history">
         <div class="page-header">
           <div class="page-title">Scan History</div>
@@ -414,7 +380,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-      <!-- ── ALLOW / BLOCK LISTS ── -->
       <div class="page" id="page-allowlist">
         <div class="page-header">
           <div class="page-title">Allow / Block Lists</div>
@@ -445,7 +410,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-      <!-- ── SETTINGS ── -->
       <div class="page" id="page-settings">
         <div class="page-header">
           <div class="page-title">Settings</div>
@@ -493,15 +457,15 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
           </div>
           <div class="settings-card">
             <div class="settings-card-title">Score labels</div>
-            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--red)">Dangerous</div>    <div class="setting-desc">Score 0–44</div></div>   <span class="badge danger">0–44</span></div>
-            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--amber)">Suspicious</div>  <div class="setting-desc">Score 45–64</div></div>  <span class="badge warn">45–64</span></div>
-            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--text2)">Probably safe</div><div class="setting-desc">Score 65–84</div></div>  <span class="badge" style="background:var(--bg3);color:var(--text2)">65–84</span></div>
-            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--accent)">Safe</div>       <div class="setting-desc">Score 85–100</div></div> <span class="badge safe">85–100</span></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--red)">Dangerous</div><div class="setting-desc">Score 0–44</div></div><span class="badge danger">0–44</span></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--amber)">Suspicious</div><div class="setting-desc">Score 45–64</div></div><span class="badge warn">45–64</span></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--text2)">Probably safe</div><div class="setting-desc">Score 65–84</div></div><span class="badge" style="background:var(--bg3);color:var(--text2)">65–84</span></div>
+            <div class="setting-row"><div class="setting-info"><div class="setting-label" style="color:var(--accent)">Safe</div><div class="setting-desc">Score 85–100</div></div><span class="badge safe">85–100</span></div>
           </div>
           <div class="settings-card">
             <div class="settings-card-title">False positive report</div>
             <div class="report-form">
-              <input class="list-input" id="fp-url"   placeholder="URL that was wrongly flagged" style="width:100%"/>
+              <input class="list-input" id="fp-url" placeholder="URL that was wrongly flagged" style="width:100%"/>
               <textarea class="report-textarea" id="fp-notes" placeholder="Why do you think the result is wrong?"></textarea>
               <button class="btn-report" onclick="submitReport()">Submit report →</button>
             </div>
@@ -509,7 +473,6 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-      <!-- ── REPORTS ── -->
       <div class="page" id="page-reports">
         <div class="page-header">
           <div class="page-title">Reports</div>
@@ -527,26 +490,19 @@ input:checked + .toggle-slider:before{transform:translateX(16px);background:#000
         </div>
       </div>
 
-    </div><!-- /main -->
-  </div><!-- /app-body -->
-</div><!-- /app -->
+    </div>
+  </div>
+</div>
 
 <div id="toast"></div>
 
 <script>
-// ════════════════════════════════════════════
-//  CONFIG
-// ════════════════════════════════════════════
-const API_URL = "https://fraudshield-1-pkvb.onrender.com/predict";
-
+const API_URL = "https://fraudshield-1-pkvb.onrender.com/check";
 const USERS = {
   "admin@fraudshield.io": "password123",
-  "user@test.com":        "test123"
+  "user@test.com": "test123"
 };
 
-// ════════════════════════════════════════════
-//  STATE
-// ════════════════════════════════════════════
 let scanHistory = [];
 let allowList   = [];
 let blockList   = [];
@@ -555,9 +511,6 @@ let fpReports   = [];
 const WEEK_DAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 const WEEK_DATA = [12, 8, 19, 7, 14, 21, 6];
 
-// ════════════════════════════════════════════
-//  HELPERS
-// ════════════════════════════════════════════
 function getVerdict(score) {
   if (score >= 85) return { label: "Safe",          cls: "safe"   };
   if (score >= 65) return { label: "Probably safe", cls: "safe"   };
@@ -593,9 +546,6 @@ function scoreRow(h) {
   return "<td><span class=\"score-pill " + getPillCls(h.score) + "\">" + h.score + "</span></td>";
 }
 
-// ════════════════════════════════════════════
-//  AUTH
-// ════════════════════════════════════════════
 function prefill() {
   document.getElementById("login-email").value = "admin@fraudshield.io";
   document.getElementById("login-pass").value  = "password123";
@@ -628,23 +578,21 @@ document.getElementById("login-pass").addEventListener("keydown", function(e) {
   if (e.key === "Enter") doLogin();
 });
 
-// ════════════════════════════════════════════
-//  STORAGE (syncs with chrome.storage if available)
-// ════════════════════════════════════════════
 function loadFromStorage() {
-  // When opened as a Chrome extension page, read from chrome.storage
   if (typeof chrome !== "undefined" && chrome.storage) {
-    chrome.storage.sync.get(["fs_history","fs_allowlist","fs_blocklist","fs_reports"], function(data) {
-      scanHistory = data.fs_history   || [];
-      allowList   = data.fs_allowlist || [];
-      blockList   = data.fs_blocklist || [];
-      fpReports   = data.fs_reports   || [];
-      // Seed demo data if empty
+    chrome.storage.local.get(["scanHistory","fs_allowlist","fs_blocklist","fs_reports"], function(data) {
+      var raw = data.scanHistory || [];
+      scanHistory = raw.map(function(e) {
+        var v = getVerdict(e.score || 0);
+        return Object.assign({}, e, { label: e.label || v.label, cls: e.cls || v.cls, time: e.time || new Date(e.timestamp || Date.now()).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}), ts: e.ts || new Date(e.timestamp||Date.now()).getTime() });
+      });
+      allowList = data.fs_allowlist || [];
+      blockList = data.fs_blocklist || [];
+      fpReports = data.fs_reports   || [];
       if (!scanHistory.length) loadDemoData();
       refreshAll();
     });
   } else {
-    // Fallback for browser preview
     loadDemoData();
     refreshAll();
   }
@@ -652,27 +600,22 @@ function loadFromStorage() {
 
 function saveToStorage() {
   if (typeof chrome !== "undefined" && chrome.storage) {
-    chrome.storage.sync.set({
-      fs_history:   scanHistory,
-      fs_allowlist: allowList,
-      fs_blocklist: blockList,
-      fs_reports:   fpReports,
-    });
+    chrome.storage.local.set({ fs_allowlist: allowList, fs_blocklist: blockList, fs_reports: fpReports });
   }
 }
 
 function loadDemoData() {
   var urls = [
-    { url: "https://google.com",              score: 96 },
-    { url: "https://paypal-login-verify.ru",  score: 11 },
-    { url: "https://github.com",              score: 93 },
-    { url: "https://secure-bank-update.xyz",  score: 18 },
-    { url: "https://stackoverflow.com",       score: 91 },
-    { url: "https://amazon.com",              score: 88 },
-    { url: "https://phishing-alert.net",      score:  8 },
-    { url: "https://netflix.com",             score: 85 },
-    { url: "https://suspicious-verify.io",    score: 52 },
-    { url: "https://docs.google.com",         score: 94 },
+    { url: "https://google.com",             score: 96 },
+    { url: "https://paypal-login-verify.ru", score: 11 },
+    { url: "https://github.com",             score: 93 },
+    { url: "https://secure-bank-update.xyz", score: 18 },
+    { url: "https://stackoverflow.com",      score: 91 },
+    { url: "https://amazon.com",             score: 88 },
+    { url: "https://phishing-alert.net",     score:  8 },
+    { url: "https://netflix.com",            score: 85 },
+    { url: "https://suspicious-verify.io",   score: 52 },
+    { url: "https://docs.google.com",        score: 94 },
   ];
   scanHistory = urls.map(function(u, i) {
     return Object.assign({}, u, getVerdict(u.score), {
@@ -692,9 +635,6 @@ function loadDemoData() {
   ];
 }
 
-// ════════════════════════════════════════════
-//  REAL API SCAN
-// ════════════════════════════════════════════
 async function callAPI(url) {
   var resp = await fetch(API_URL, {
     method:  "POST",
@@ -703,67 +643,39 @@ async function callAPI(url) {
   });
   if (!resp.ok) throw new Error("API returned " + resp.status);
   var data = await resp.json();
-
-  // Handle all possible response formats
-  var score = 50;
-  if (typeof data.score === "number")           score = Math.round(data.score);
-  else if (typeof data.phishing_score === "number") score = Math.round(data.phishing_score);
-  else if (typeof data.prediction === "number") {
-    score = data.prediction <= 1
-      ? Math.round((1 - data.prediction) * 100)
-      : Math.round(data.prediction);
-  } else if (typeof data.probability === "number") {
-    score = Math.round((1 - data.probability) * 100);
-  }
-  return Math.max(0, Math.min(100, score));
+  if (typeof data.safety_score === "number") return Math.round(data.safety_score);
+  if (typeof data.score === "number")        return Math.round(data.score);
+  if (typeof data.prediction === "number")   return data.prediction <= 1 ? Math.round((1 - data.prediction) * 100) : Math.round(data.prediction);
+  if (typeof data.probability === "number")  return Math.round((1 - data.probability) * 100);
+  return 50;
 }
 
-// ════════════════════════════════════════════
-//  URL SCANNER
-// ════════════════════════════════════════════
 async function runScan() {
   var input  = document.getElementById("scan-url-input");
   var btn    = document.getElementById("scan-btn");
   var url    = input.value.trim();
-
   if (!url) { toast("Enter a URL first", "error"); return; }
   if (!url.startsWith("http")) url = "https://" + url;
 
-  // Dedup check
   var dedupSec = parseInt(document.getElementById("set-dedup").value) * 1000;
   var existing = scanHistory.find(function(h) {
     return h.url === url && Date.now() - (h.ts || 0) < dedupSec;
   });
-  if (existing) {
-    toast("Already scanned recently — dedup active", "error");
-    showScanResult(existing);
-    return;
-  }
+  if (existing) { toast("Already scanned recently — dedup active", "error"); showScanResult(existing); return; }
 
-  // Check lists
   var domain = "";
   try { domain = new URL(url).hostname; } catch(e) {}
 
   if (allowList.some(function(x) { return url.includes(x.url) || domain.includes(x.url); })) {
     var entry = { url: url, score: 100, label: "Safe (allowlisted)", cls: "safe", time: now(), ts: Date.now() };
-    scanHistory.unshift(entry);
-    input.value = "";
-    showScanResult(entry);
-    refreshAll(); saveToStorage();
-    return;
+    scanHistory.unshift(entry); input.value = ""; showScanResult(entry); refreshAll(); saveToStorage(); return;
   }
   if (blockList.some(function(x) { return url.includes(x.url) || domain.includes(x.url); })) {
     var entry = { url: url, score: 0, label: "Dangerous (blocklisted)", cls: "danger", time: now(), ts: Date.now() };
-    scanHistory.unshift(entry);
-    input.value = "";
-    showScanResult(entry);
-    refreshAll(); saveToStorage();
-    return;
+    scanHistory.unshift(entry); input.value = ""; showScanResult(entry); refreshAll(); saveToStorage(); return;
   }
 
-  // Call real API
-  btn.disabled    = true;
-  btn.textContent = "Scanning…";
+  btn.disabled = true; btn.textContent = "Scanning…";
   toast("Calling ML backend…", "info");
 
   var score = 50;
@@ -773,23 +685,17 @@ async function runScan() {
   } catch(err) {
     console.warn("API error:", err);
     toast("Backend error — using fallback score", "error");
-    // Fallback: basic heuristic
     var lower = url.toLowerCase();
     if (lower.includes("phishing") || lower.includes("verify") || lower.includes("secure-bank")) score = 15;
     else if (lower.includes("google") || lower.includes("github")) score = 93;
     else score = 55;
   }
 
-  btn.disabled    = false;
-  btn.textContent = "Scan now";
-
-  var v     = getVerdict(score);
+  btn.disabled = false; btn.textContent = "Scan now";
+  var v = getVerdict(score);
   var entry = Object.assign({ url: url, score: score, time: now(), ts: Date.now() }, v);
-  scanHistory.unshift(entry);
-  input.value = "";
-  showScanResult(entry);
-  refreshAll();
-  saveToStorage();
+  scanHistory.unshift(entry); input.value = "";
+  showScanResult(entry); refreshAll(); saveToStorage();
 }
 
 function showScanResult(entry) {
@@ -817,33 +723,24 @@ function showScanResult(entry) {
 
 function quickAdd(type, url) {
   if (type === "allow") {
-    if (!allowList.find(function(x) { return x.url === url; })) {
-      allowList.unshift({ url: url, added: now() });
-      toast("Added to allowlist");
-    } else { toast("Already in allowlist", "error"); }
+    if (!allowList.find(function(x) { return x.url === url; })) { allowList.unshift({ url: url, added: now() }); toast("Added to allowlist"); }
+    else { toast("Already in allowlist", "error"); }
   } else {
-    if (!blockList.find(function(x) { return x.url === url; })) {
-      blockList.unshift({ url: url, added: now() });
-      toast("Added to blocklist", "error");
-    } else { toast("Already in blocklist", "error"); }
+    if (!blockList.find(function(x) { return x.url === url; })) { blockList.unshift({ url: url, added: now() }); toast("Added to blocklist", "error"); }
+    else { toast("Already in blocklist", "error"); }
   }
   refreshAll(); saveToStorage();
 }
 
-// ════════════════════════════════════════════
-//  LISTS
-// ════════════════════════════════════════════
 function addToList(type) {
   var val = document.getElementById("list-url-input").value.trim();
   if (!val) { toast("Enter a domain or URL", "error"); return; }
   if (type === "allow") {
     if (allowList.find(function(x) { return x.url === val; })) { toast("Already in allowlist", "error"); return; }
-    allowList.unshift({ url: val, added: now() });
-    toast("Added to allowlist");
+    allowList.unshift({ url: val, added: now() }); toast("Added to allowlist");
   } else {
     if (blockList.find(function(x) { return x.url === val; })) { toast("Already in blocklist", "error"); return; }
-    blockList.unshift({ url: val, added: now() });
-    toast("Added to blocklist", "error");
+    blockList.unshift({ url: val, added: now() }); toast("Added to blocklist", "error");
   }
   document.getElementById("list-url-input").value = "";
   refreshAll(); saveToStorage();
@@ -852,58 +749,42 @@ function addToList(type) {
 function removeFromList(type, url) {
   if (type === "allow") allowList = allowList.filter(function(x) { return x.url !== url; });
   else                   blockList = blockList.filter(function(x) { return x.url !== url; });
-  refreshAll(); saveToStorage();
-  toast("Removed");
+  refreshAll(); saveToStorage(); toast("Removed");
 }
 
-// ════════════════════════════════════════════
-//  HISTORY
-// ════════════════════════════════════════════
 function removeHistory(url) {
   scanHistory = scanHistory.filter(function(x) { return x.url !== url; });
-  refreshAll(); saveToStorage();
-  toast("Removed");
+  refreshAll(); saveToStorage(); toast("Removed");
 }
 
 function clearHistory() {
   if (!confirm("Clear all scan history?")) return;
-  scanHistory = [];
-  refreshAll(); saveToStorage();
-  toast("History cleared");
+  scanHistory = []; refreshAll(); saveToStorage(); toast("History cleared");
 }
 
-// ════════════════════════════════════════════
-//  EXPORT
-// ════════════════════════════════════════════
 function exportCSV() {
   var rows = [["URL","Score","Verdict","Time"]].concat(
     scanHistory.map(function(h) { return [h.url, h.score, h.label, h.time]; })
   );
-  dlCSV(rows, "fraudshield_history.csv");
-  toast("CSV exported");
+  dlCSV(rows, "fraudshield_history.csv"); toast("CSV exported");
 }
 
 function exportReports() {
   var rows = [["URL","Notes","Time","Status"]].concat(
     fpReports.map(function(r) { return [r.url, r.notes, r.time, r.status]; })
   );
-  dlCSV(rows, "fraudshield_reports.csv");
-  toast("Reports exported");
+  dlCSV(rows, "fraudshield_reports.csv"); toast("Reports exported");
 }
 
 function dlCSV(rows, filename) {
   var csv = rows.map(function(r) {
     return r.map(function(c) { return '"' + String(c).replace(/"/g,'""') + '"'; }).join(",");
   }).join("\n");
-  var a    = document.createElement("a");
-  a.href   = "data:text/csv," + encodeURIComponent(csv);
-  a.download = filename;
-  a.click();
+  var a = document.createElement("a");
+  a.href = "data:text/csv," + encodeURIComponent(csv);
+  a.download = filename; a.click();
 }
 
-// ════════════════════════════════════════════
-//  REPORTS
-// ════════════════════════════════════════════
 function submitReport() {
   var url   = document.getElementById("fp-url").value.trim();
   var notes = document.getElementById("fp-notes").value.trim();
@@ -911,13 +792,9 @@ function submitReport() {
   fpReports.unshift({ url: url, notes: notes, time: now(), status: "pending" });
   document.getElementById("fp-url").value   = "";
   document.getElementById("fp-notes").value = "";
-  toast("Report submitted");
-  renderReports(); saveToStorage();
+  toast("Report submitted"); renderReports(); saveToStorage();
 }
 
-// ════════════════════════════════════════════
-//  SETTINGS
-// ════════════════════════════════════════════
 function saveSettings() {
   var settings = {
     proactive:     document.getElementById("set-proactive").checked,
@@ -930,70 +807,56 @@ function saveSettings() {
   };
   if (typeof chrome !== "undefined" && chrome.storage) {
     chrome.storage.sync.set({ fs_settings: settings });
-    // Tell background.js to pick up new settings
     chrome.runtime.sendMessage({ type: "SAVE_SETTINGS", settings: settings }).catch(function(){});
   }
   toast("Settings saved");
 }
 
-// ════════════════════════════════════════════
-//  RENDER
-// ════════════════════════════════════════════
 function renderStats() {
   var total      = scanHistory.length;
   var threats    = scanHistory.filter(function(h) { return h.score < 45; }).length;
   var suspicious = scanHistory.filter(function(h) { return h.score >= 45 && h.score < 65; }).length;
   var safe       = scanHistory.filter(function(h) { return h.score >= 85; }).length;
-
   document.getElementById("stat-total").textContent      = total;
   document.getElementById("stat-threats").textContent    = threats;
   document.getElementById("stat-suspicious").textContent = suspicious;
   document.getElementById("stat-safe").textContent       = safe;
   document.getElementById("hist-count").textContent      = total || "";
   document.getElementById("block-count").textContent     = blockList.length || "";
-
-  // Donut
   var circ = 220;
   var tPct = threats    / Math.max(total, 1);
   var wPct = suspicious / Math.max(total, 1);
   var sPct = (total - threats - suspicious) / Math.max(total, 1);
   var dLen = circ * tPct, wLen = circ * wPct, sLen = circ * sPct;
-
   document.getElementById("d-danger").setAttribute("stroke-dasharray",  dLen + " " + (circ - dLen));
   document.getElementById("d-danger").setAttribute("stroke-dashoffset", "55");
   document.getElementById("d-warn").setAttribute("stroke-dasharray",    wLen + " " + (circ - wLen));
   document.getElementById("d-warn").setAttribute("stroke-dashoffset",   String(55 - dLen));
   document.getElementById("d-safe").setAttribute("stroke-dasharray",    sLen + " " + (circ - sLen));
   document.getElementById("d-safe").setAttribute("stroke-dashoffset",   String(55 - dLen - wLen));
-
   document.getElementById("leg-danger").textContent = "Dangerous — " + threats;
   document.getElementById("leg-warn").textContent   = "Suspicious — " + suspicious;
   document.getElementById("leg-safe").textContent   = "Safe — " + safe;
 }
 
 function renderWeekBars() {
-  var max    = Math.max.apply(null, WEEK_DATA);
-  var today  = new Date().getDay();
-  var bars   = document.getElementById("week-bars");
-  var lbls   = document.getElementById("week-labels");
+  var max  = Math.max.apply(null, WEEK_DATA);
+  var today = new Date().getDay();
+  var bars = document.getElementById("week-bars");
+  var lbls = document.getElementById("week-labels");
   bars.innerHTML = WEEK_DATA.map(function(v, i) {
-    var h       = Math.max(8, Math.round(v / max * 76));
+    var h = Math.max(8, Math.round(v / max * 76));
     var isToday = (i === (today === 0 ? 6 : today - 1));
-    var color   = isToday ? "var(--accent)" : "var(--bg4)";
-    return "<div class=\"mini-bar\" style=\"height:" + h + "px;background:" + color + "\"></div>";
+    return "<div class=\"mini-bar\" style=\"height:" + h + "px;background:" + (isToday ? "var(--accent)" : "var(--bg4)") + "\"></div>";
   }).join("");
-  lbls.innerHTML = WEEK_DAYS.map(function(d) {
-    return "<div class=\"bar-label\">" + d + "</div>";
-  }).join("");
+  lbls.innerHTML = WEEK_DAYS.map(function(d) { return "<div class=\"bar-label\">" + d + "</div>"; }).join("");
 }
 
 function renderTableBody(tbodyId, data, showAction) {
   showAction = showAction !== false;
   var el = document.getElementById(tbodyId);
-  if (!data.length) {
-    el.innerHTML = "<tr><td colspan=\"5\"><div class=\"empty\">No records yet</div></td></tr>";
-    return;
-  }
+  if (!el) return;
+  if (!data.length) { el.innerHTML = "<tr><td colspan=\"5\"><div class=\"empty\">No records yet</div></td></tr>"; return; }
   el.innerHTML = data.map(function(h) {
     var safeUrl = h.url.replace(/'/g, "\\'");
     return "<tr>"
@@ -1001,9 +864,7 @@ function renderTableBody(tbodyId, data, showAction) {
       + scoreRow(h)
       + "<td><span class=\"badge " + h.cls + "\">" + h.label + "</span></td>"
       + "<td class=\"mono\" style=\"font-size:11px;color:var(--text3)\">" + h.time + "</td>"
-      + (showAction
-          ? "<td><button class=\"del-btn\" onclick=\"removeHistory('"+safeUrl+"')\">Remove</button></td>"
-          : "<td></td>")
+      + (showAction ? "<td><button class=\"del-btn\" onclick=\"removeHistory('"+safeUrl+"')\">Remove</button></td>" : "<td></td>")
       + "</tr>";
   }).join("");
 }
@@ -1011,10 +872,7 @@ function renderTableBody(tbodyId, data, showAction) {
 function renderDashRecent() {
   var tbody = document.getElementById("dash-recent");
   var data  = scanHistory.slice(0, 6);
-  if (!data.length) {
-    tbody.innerHTML = "<tr><td colspan=\"4\"><div class=\"empty\">No scans yet — try scanning a URL</div></td></tr>";
-    return;
-  }
+  if (!data.length) { tbody.innerHTML = "<tr><td colspan=\"4\"><div class=\"empty\">No scans yet — try scanning a URL</div></td></tr>"; return; }
   tbody.innerHTML = data.map(function(h) {
     return "<tr>"
       + "<td class=\"mono\">" + trunc(h.url, 48) + "</td>"
@@ -1028,33 +886,19 @@ function renderDashRecent() {
 function renderLists() {
   var ai = document.getElementById("allow-items");
   var bi = document.getElementById("block-items");
-
   ai.innerHTML = allowList.length
-    ? allowList.map(function(x) {
-        var safe = x.url.replace(/'/g,"\\'");
-        return "<div class=\"list-item\"><div><div class=\"list-item-url\">" + x.url + "</div><div class=\"list-item-date\">" + x.added + "</div></div>"
-          + "<button class=\"del-btn\" onclick=\"removeFromList('allow','"+safe+"')\">Remove</button></div>";
-      }).join("")
+    ? allowList.map(function(x) { var safe = x.url.replace(/'/g,"\\'"); return "<div class=\"list-item\"><div><div class=\"list-item-url\">" + x.url + "</div><div class=\"list-item-date\">" + x.added + "</div></div><button class=\"del-btn\" onclick=\"removeFromList('allow','"+safe+"')\">Remove</button></div>"; }).join("")
     : "<div class=\"empty\">No allowed domains</div>";
-
   bi.innerHTML = blockList.length
-    ? blockList.map(function(x) {
-        var safe = x.url.replace(/'/g,"\\'");
-        return "<div class=\"list-item\"><div><div class=\"list-item-url\">" + x.url + "</div><div class=\"list-item-date\">" + x.added + "</div></div>"
-          + "<button class=\"del-btn\" onclick=\"removeFromList('block','"+safe+"')\">Remove</button></div>";
-      }).join("")
+    ? blockList.map(function(x) { var safe = x.url.replace(/'/g,"\\'"); return "<div class=\"list-item\"><div><div class=\"list-item-url\">" + x.url + "</div><div class=\"list-item-date\">" + x.added + "</div></div><button class=\"del-btn\" onclick=\"removeFromList('block','"+safe+"')\">Remove</button></div>"; }).join("")
     : "<div class=\"empty\">No blocked domains</div>";
-
   document.getElementById("allow-count").textContent  = allowList.length;
   document.getElementById("block-count2").textContent = blockList.length;
 }
 
 function renderReports() {
   var tbody = document.getElementById("reports-body");
-  if (!fpReports.length) {
-    tbody.innerHTML = "<tr><td colspan=\"4\"><div class=\"empty\">No reports submitted</div></td></tr>";
-    return;
-  }
+  if (!fpReports.length) { tbody.innerHTML = "<tr><td colspan=\"4\"><div class=\"empty\">No reports submitted</div></td></tr>"; return; }
   tbody.innerHTML = fpReports.map(function(r) {
     return "<tr>"
       + "<td class=\"mono\">" + trunc(r.url, 40) + "</td>"
@@ -1066,24 +910,18 @@ function renderReports() {
 }
 
 function refreshAll() {
-  renderStats();
-  renderWeekBars();
-  renderDashRecent();
+  renderStats(); renderWeekBars(); renderDashRecent();
   renderTableBody("scan-history-body", scanHistory);
   renderTableBody("history-body",      scanHistory);
-  renderLists();
-  renderReports();
+  renderLists(); renderReports();
 }
 
-// ════════════════════════════════════════════
-//  NAVIGATION
-// ════════════════════════════════════════════
 function showPage(name, el) {
   document.querySelectorAll(".page").forEach(function(p) { p.classList.remove("active"); });
   document.querySelectorAll(".nav-item").forEach(function(n) { n.classList.remove("active"); });
-  document.getElementById("page-" + name).classList.add("active");
-  if (el) el.classList.add("active");
-  if (name === "scanner") document.getElementById("scan-url-input").focus();
+  var page = document.getElementById("page-" + name);
+  if (page) page.classList.add("active");
+  if (el)   el.classList.add("active");
 }
 </script>
 </body>
