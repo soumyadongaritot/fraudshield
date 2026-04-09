@@ -1,44 +1,52 @@
 {
   "manifest_version": 3,
-  "name": "FraudShield - AI Fraud Detector",
-  "version": "4.2.0",
-  "description": "Real-time AI-powered fraud & phishing detection with proactive warnings",
+  "name": "FraudShield",
+  "version": "4.2",
+  "description": "Real-time phishing and fraud detection powered by ML",
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard.html", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
   "permissions": [
     "activeTab",
     "tabs",
     "storage",
     "notifications",
-    "downloads"
+    "scripting"
   ],
+
   "host_permissions": [
-    "<all_urls>",
-    "https://fraudshield-1-pkvb.onrender.com/*",
-    "https://bgfztnukkgcakeogpvdi.supabase.co/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "content_scripts": [
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
-  ],
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co;"
-  }
+    "https://*/*",
+    "http://*/*"
+  ]
 }

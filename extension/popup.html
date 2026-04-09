@@ -14,107 +14,133 @@
   --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
 }
 body{
-  width:340px;min-height:420px;
+  width:340px;min-height:440px;
   background:var(--bg);color:var(--text);
   font-family:var(--font);overflow:hidden;
 }
 
-/* ── HEADER ── */
+/* HEADER */
 .header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;background:var(--bg2);
+  padding:13px 16px;background:var(--bg2);
   border-bottom:.5px solid var(--border);
 }
 .logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:-.3px}
-.logo-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),#00a882);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.logo-icon{
+  width:26px;height:26px;
+  background:linear-gradient(135deg,var(--accent),#00a882);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;
+}
 .logo-icon svg{width:14px;height:14px}
 .logo span{color:var(--accent)}
-.version{font-size:10px;font-family:var(--mono);color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:10px;border:.5px solid var(--border)}
+.version{
+  font-size:10px;font-family:var(--mono);color:var(--text3);
+  background:var(--bg3);padding:2px 7px;border-radius:10px;
+  border:.5px solid var(--border);
+}
 
-/* ── SCORE SECTION ── */
+/* SCORE SECTION */
 .score-section{
   display:flex;flex-direction:column;align-items:center;
-  padding:22px 16px 16px;gap:8px;
+  padding:22px 16px 14px;gap:8px;
 }
 .score-ring{
-  width:88px;height:88px;border-radius:50%;
+  width:90px;height:90px;border-radius:50%;
   border:3px solid var(--border2);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:border-color .3s;position:relative;
+  transition:border-color .4s;
 }
-.score-ring::before{
-  content:'';position:absolute;inset:-5px;border-radius:50%;
-  border:1px solid transparent;transition:border-color .3s;
+.score-number{
+  font-size:28px;font-weight:800;
+  font-family:var(--mono);line-height:1;
+  color:var(--text3);transition:color .3s;
 }
-.score-number{font-size:26px;font-weight:800;font-family:var(--mono);line-height:1}
-.score-sub{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:1px}
-.verdict-label{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.score-sub{font-size:9px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.verdict-label{
+  font-size:14px;font-weight:700;letter-spacing:-.2px;
+  color:var(--text3);transition:color .3s;
+}
 .scanned-url{
   font-size:10px;font-family:var(--mono);color:var(--text3);
-  text-align:center;max-width:280px;
+  text-align:center;max-width:300px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:0 8px;
 }
 
-/* ── STATUS ── */
+/* STATUS BAR */
 .status{
   margin:0 16px 10px;padding:7px 12px;
   border-radius:8px;font-size:11px;font-weight:500;
   display:none;text-align:center;
 }
-.status.info   {background:rgba(59,130,246,.1);color:#3b82f6;border:.5px solid rgba(59,130,246,.3)}
-.status.success{background:rgba(0,212,170,.1);color:var(--accent);border:.5px solid rgba(0,212,170,.3)}
-.status.error  {background:rgba(255,77,109,.1);color:var(--red);border:.5px solid rgba(255,77,109,.3)}
+.status.info   {background:rgba(59,130,246,.1);   color:#3b82f6; border:.5px solid rgba(59,130,246,.3)}
+.status.success{background:rgba(0,212,170,.1);    color:var(--accent);border:.5px solid rgba(0,212,170,.3)}
+.status.error  {background:rgba(255,77,109,.1);   color:var(--red);  border:.5px solid rgba(255,77,109,.3)}
 
-/* ── QUICK ACTIONS ── */
+/* QUICK ACTIONS */
 .actions{display:flex;gap:8px;padding:0 16px 14px}
 .btn{
-  flex:1;padding:9px 0;font-family:var(--font);font-size:11px;font-weight:600;
-  border-radius:8px;cursor:pointer;transition:all .15s;border:.5px solid;
+  flex:1;padding:9px 0;
+  font-family:var(--font);font-size:11px;font-weight:600;
+  border-radius:8px;cursor:pointer;
+  transition:all .15s;border:.5px solid;
 }
-.btn-allow{background:rgba(0,212,170,.08);color:var(--accent);border-color:rgba(0,212,170,.3)}
+.btn-allow {background:rgba(0,212,170,.08); color:var(--accent); border-color:rgba(0,212,170,.3)}
 .btn-allow:hover{background:var(--accent);color:#000}
-.btn-block{background:rgba(255,77,109,.08);color:var(--red);border-color:rgba(255,77,109,.3)}
+.btn-block {background:rgba(255,77,109,.08);color:var(--red);   border-color:rgba(255,77,109,.3)}
 .btn-block:hover{background:var(--red);color:#fff}
 .btn-rescan{background:var(--bg3);color:var(--text2);border-color:var(--border2)}
 .btn-rescan:hover{color:var(--text);border-color:var(--border2)}
 
-/* ── HISTORY MINI LIST ── */
+/* HISTORY */
 .section-label{
-  padding:0 16px 6px;font-size:10px;font-weight:600;
+  padding:0 16px 6px;
+  font-size:10px;font-weight:600;
   letter-spacing:.8px;text-transform:uppercase;color:var(--text3);
 }
-.history-wrap{margin:0 16px;background:var(--bg2);border:.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.history-wrap{
+  margin:0 16px;background:var(--bg2);
+  border:.5px solid var(--border);border-radius:10px;
+  overflow:hidden;margin-bottom:14px;
+}
 .history-wrap table{width:100%;border-collapse:collapse}
 .history-wrap th{
-  font-size:9px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
-  color:var(--text3);padding:7px 10px;background:var(--bg3);text-align:left;
+  font-size:9px;font-weight:600;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--text3);
+  padding:7px 10px;background:var(--bg3);text-align:left;
 }
 .history-wrap td{
-  font-size:11px;padding:7px 10px;border-top:.5px solid var(--border);
-  color:var(--text2);
+  font-size:11px;padding:7px 10px;
+  border-top:.5px solid var(--border);color:var(--text2);
 }
 .history-wrap tr:hover td{background:var(--bg3)}
 .url-cell{
-  max-width:140px;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;font-family:var(--mono);font-size:10px;
+  max-width:130px;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--mono);font-size:10px;
+  color:var(--text3);
 }
 
-/* ── FOOTER ── */
+/* FOOTER */
 .footer{
   padding:10px 16px;border-top:.5px solid var(--border);
   background:var(--bg2);
 }
 .btn-dashboard{
-  width:100%;padding:10px;background:var(--accent);color:#000;
+  width:100%;padding:10px;
+  background:var(--accent);color:#000;
   font-family:var(--font);font-size:12px;font-weight:700;
   border:none;border-radius:8px;cursor:pointer;
   transition:opacity .2s;letter-spacing:.2px;
 }
 .btn-dashboard:hover{opacity:.85}
 
-/* ── SCANNING ANIMATION ── */
-@keyframes spin{to{transform:rotate(360deg)}}
-.scanning .score-ring{animation:spin 1.5s linear infinite;border-color:var(--accent)!important;opacity:.7}
+/* SCANNING ANIMATION */
+@keyframes borderPulse{
+  0%,100%{border-color:rgba(0,212,170,.3)}
+  50%    {border-color:rgba(0,212,170,.9)}
+}
+.scanning{animation:borderPulse 1.2s ease-in-out infinite}
 </style>
 </head>
 <body>
@@ -133,14 +159,14 @@ body{
   <div class="version">v4.2</div>
 </div>
 
-<!-- SCORE -->
+<!-- SCORE DISPLAY -->
 <div class="score-section">
-  <div class="score-ring" id="score-ring">
-    <div class="score-number" id="score-number">—</div>
+  <div class="score-ring scanning" id="score-ring">
+    <div class="score-number" id="score-number">…</div>
     <div class="score-sub">/ 100</div>
   </div>
   <div class="verdict-label" id="verdict-label">Scanning…</div>
-  <div class="scanned-url" id="scanned-url">Loading current tab…</div>
+  <div class="scanned-url"   id="scanned-url">Loading current tab…</div>
 </div>
 
 <!-- STATUS -->
@@ -148,12 +174,12 @@ body{
 
 <!-- QUICK ACTIONS -->
 <div class="actions">
-  <button class="btn btn-allow"   id="btn-allowlist">+ Allow</button>
-  <button class="btn btn-rescan"  id="btn-scan">↻ Rescan</button>
-  <button class="btn btn-block"   id="btn-blocklist">⊘ Block</button>
+  <button class="btn btn-allow"  id="btn-allowlist">+ Allow</button>
+  <button class="btn btn-rescan" id="btn-scan">↻ Rescan</button>
+  <button class="btn btn-block"  id="btn-blocklist">⊘ Block</button>
 </div>
 
-<!-- RECENT SCANS -->
+<!-- RECENT HISTORY -->
 <div class="section-label">Recent scans</div>
 <div class="history-wrap">
   <table>
@@ -161,7 +187,11 @@ body{
       <tr><th>URL</th><th>Score</th><th>Verdict</th></tr>
     </thead>
     <tbody id="popup-history">
-      <tr><td colspan="3" style="text-align:center;color:#555;padding:12px;font-size:11px">Loading…</td></tr>
+      <tr>
+        <td colspan="3" style="text-align:center;color:#555;padding:14px;font-size:11px">
+          Loading…
+        </td>
+      </tr>
     </tbody>
   </table>
 </div>
