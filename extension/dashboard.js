@@ -50,14 +50,23 @@ async function doSignup() {
       method: "POST",
       body: JSON.stringify({ email: email, password: pass })
     });
-    if (res.ok && res.data.user) {
-      okEl.textContent = "Account created! Please check your email to confirm, then sign in.";
+    if (res.ok) {
+      // If email confirmation is disabled, user is returned immediately
+      if (res.data.access_token) {
+        currentUser = res.data;
+        if (typeof chrome !== "undefined" && chrome.storage) {
+          chrome.storage.local.set({ fs_session: res.data });
+        }
+        onLoginSuccess(res.data.user || { email: email });
+        return;
+      }
+      // Email confirmation required — user will be null until confirmed
+      okEl.textContent = "Account created! Check your email to confirm, then sign in.";
       okEl.style.display = "block";
       document.getElementById("signup-email").value = "";
       document.getElementById("signup-pass").value  = "";
       document.getElementById("signup-confirm").value = "";
-      // Switch to login tab after 2s
-      setTimeout(function() { switchTab("login"); }, 2000);
+      setTimeout(function() { switchTab("login"); }, 2500);
     } else {
       var msg = (res.data.msg || res.data.error_description || res.data.message || "Sign up failed.");
       showAuthErr(errEl, msg);

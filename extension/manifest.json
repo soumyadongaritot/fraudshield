@@ -27,7 +27,7 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://www.virustotal.com https://rdap.verisign.com https://rdap.publicinterestregistry.org https://rdap.nic.io https://rdap.nic.co https://rdap.nic.ai https://rdap.nic.google https://rdap.nic.xyz https://rdap.registry.in https://rdap.nominet.uk https://rdap.denic.de https://rdap.afilias.net https://bgfztnukkgcakeogpvdi.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://www.virustotal.com https://api.whoisfreaks.com https://www.rdap.net https://bgfztnukkgcakeogpvdi.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com"
   },
   "web_accessible_resources": [
     {
