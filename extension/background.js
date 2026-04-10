@@ -36,10 +36,10 @@ async function checkWHOIS(hostname){
     );
     if(resp.ok){
       const d=await resp.json();
-      if(!d.age_years&&d.age_years!==0) return{available:false};
-      const diffYrs=d.age_years, diffMos=diffYrs*12, diffDays=diffYrs*365;
-      return{available:true,diffDays,diffMos,diffYrs,
-             created:d.created||null,registrar:d.registrar||null};
+      if(!d.available||!d.age_years) return{available:false};
+      const diffYrs=d.age_years;
+      return{available:true,diffDays:diffYrs*365,diffMos:diffYrs*12,
+             diffYrs,created:d.created||null,registrar:d.registrar||null};
     }
   }catch(e){}
   return{available:false};

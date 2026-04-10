@@ -80,7 +80,7 @@ async function checkVirusTotal(url){
   }
 }
 
-// ── WHOIS via backend proxy (no CORS issues) ─────────────────────────────────
+// ── WHOIS via backend proxy ───────────────────────────────────────────────────
 async function checkWHOIS(hostname){
   const apex = hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
   try {
@@ -91,19 +91,18 @@ async function checkWHOIS(hostname){
     );
     if (resp.ok) {
       const d = await resp.json();
-      if (!d.age_years && d.age_years !== 0) return { available: false };
+      if (!d.available || !d.age_years) return { available: false };
       const diffYrs  = d.age_years;
       const diffMos  = diffYrs * 12;
       const diffDays = diffYrs * 365;
       let ageLabel, ageSub, ageThreat;
-      if (diffDays < 30)    { ageLabel = diffDays+"d";           ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-      else if (diffMos < 6) { ageLabel = diffMos+"mo";           ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
-      else if (diffYrs < 1) { ageLabel = diffMos+"mo";           ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
+      if (diffDays < 30)    { ageLabel = diffDays+"d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
+      else if (diffMos < 6) { ageLabel = diffMos+"mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
+      else if (diffYrs < 1) { ageLabel = diffMos+"mo";  ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
       else                  { ageLabel = diffYrs+(diffYrs===1?" yr":" yrs"); ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
-      return { available: true, ageLabel, ageSub, ageThreat,
+      return { available:true, ageLabel, ageSub, ageThreat,
                diffDays, diffMos, diffYrs,
-               created: d.created || null,
-               registrar: d.registrar || null };
+               created: d.created||null, registrar: d.registrar||null };
     }
   } catch(e) {}
   return { available: false };
