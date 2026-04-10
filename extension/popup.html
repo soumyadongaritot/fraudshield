@@ -8,207 +8,77 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d0f14;--bg2:#141720;--bg3:#1a1e28;--bg4:#1f2435;
+  --bg:#0d0f14;--bg2:#141720;--bg3:#1a1e28;
   --border:#ffffff0f;--border2:#ffffff18;--border3:#ffffff28;
   --text:#dde1f0;--text2:#7c82a0;--text3:#454a60;
-  --accent:#00e5b0;--accent2:#00b88d;--accent-dim:rgba(0,229,176,0.12);
-  --red:#ff3d5a;--red-dim:rgba(255,61,90,0.12);
-  --amber:#f5a623;--amber-dim:rgba(245,166,35,0.12);
-  --blue:#4d9fff;--blue-dim:rgba(77,159,255,0.12);
-  --purple:#9d6fff;--purple-dim:rgba(157,111,255,0.12);
-  --mono:'JetBrains Mono',monospace;
-  --font:'Space Grotesk',sans-serif;
+  --accent:#00e5b0;--accent2:#00b88d;
+  --accent-dim:rgba(0,229,176,0.12);--amber-dim:rgba(245,166,35,0.12);
+  --red:#ff3d5a;--amber:#f5a623;--purple:#9d6fff;
+  --mono:'JetBrains Mono',monospace;--font:'Space Grotesk',sans-serif;
 }
-body{
-  width:380px;min-height:520px;font-family:var(--font);
-  background:var(--bg);color:var(--text);overflow:hidden;
-  font-size:13px;
-}
-
-/* HEADER */
-.header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px 12px;
-  border-bottom:.5px solid var(--border2);
-  background:linear-gradient(180deg,#161a24 0%,var(--bg) 100%);
-}
+body{width:380px;min-height:520px;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden;font-size:13px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:.5px solid var(--border2);background:linear-gradient(180deg,#161a24 0%,var(--bg) 100%)}
 .logo{display:flex;align-items:center;gap:9px}
-.logo-icon{
-  width:30px;height:30px;border-radius:8px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
+.logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-icon svg{width:16px;height:16px}
 .logo-name{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .logo-name em{color:var(--accent);font-style:normal}
 .header-right{display:flex;align-items:center;gap:8px}
-.ver-tag{
-  font-size:10px;font-family:var(--mono);font-weight:500;
-  padding:3px 8px;border-radius:20px;
-  background:var(--bg3);border:.5px solid var(--border3);color:var(--text2);
-}
-.ai-tag{
-  font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
-  background:var(--purple-dim);border:.5px solid var(--purple);color:var(--purple);
-  letter-spacing:.5px;
-}
-.history-btn{
-  display:flex;align-items:center;gap:5px;
-  font-size:10px;font-weight:600;letter-spacing:.6px;
-  padding:4px 10px;border-radius:6px;cursor:pointer;
-  background:var(--bg3);border:.5px solid var(--border3);
-  color:var(--text2);transition:all .15s;
-}
+.ver-tag{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:20px;background:var(--bg3);border:.5px solid var(--border3);color:var(--text3)}
+.ai-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(157,111,255,0.12);border:.5px solid var(--purple);color:var(--purple);letter-spacing:.5px}
+.history-btn{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.6px;padding:4px 10px;border-radius:6px;cursor:pointer;background:var(--bg3);border:.5px solid var(--border3);color:var(--text2);transition:all .15s}
 .history-btn:hover{color:var(--accent);border-color:var(--accent)}
 .history-btn svg{width:11px;height:11px}
-
-/* URL BAR */
-.url-bar{
-  padding:10px 16px;
-  background:var(--bg2);border-bottom:.5px solid var(--border);
-  font-family:var(--mono);font-size:11px;color:var(--text3);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  letter-spacing:-.2px;
-}
-
-/* SCORE SECTION */
-.score-section{
-  padding:20px 16px 16px;
-  display:flex;align-items:center;gap:18px;
-  border-bottom:.5px solid var(--border);
-}
+.url-bar{padding:9px 16px;background:var(--bg2);border-bottom:.5px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score-section{padding:18px 16px 14px;display:flex;align-items:center;gap:16px;border-bottom:.5px solid var(--border)}
 .score-ring-wrap{position:relative;flex-shrink:0}
 .score-ring-wrap svg{transform:rotate(-90deg)}
-.score-center{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
+.score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .score-num{font-size:28px;font-weight:700;font-family:var(--mono);line-height:1}
-.score-denom{font-size:10px;color:var(--text3);margin-top:2px}
+.score-denom{font-size:10px;color:var(--text3);margin-top:1px}
 .score-info{flex:1}
-.verdict-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.verdict-badge{
-  display:flex;align-items:center;gap:6px;
-  font-size:15px;font-weight:700;
-}
-.verdict-badge svg{width:16px;height:16px}
-.risk-tag{
-  font-size:10px;font-weight:600;letter-spacing:.5px;
-  padding:2px 8px;border-radius:10px;
-}
-.verdict-desc{font-size:12px;color:var(--text2);line-height:1.4;margin-bottom:10px}
-.threat-tag{
-  display:inline-block;font-size:10px;font-weight:600;
-  padding:3px 10px;border-radius:6px;
-  background:var(--accent-dim);color:var(--accent);border:.5px solid var(--accent);
-  letter-spacing:.3px;
-}
-
-/* INFO CARDS GRID */
-.info-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:1px;background:var(--border);
-  border-bottom:.5px solid var(--border);
-}
-.info-card{
-  padding:12px 14px;background:var(--bg);
-  transition:background .15s;
-}
+.verdict-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.verdict-badge{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700}
+.verdict-badge svg{width:15px;height:15px}
+.risk-tag{font-size:10px;font-weight:600;letter-spacing:.5px;padding:2px 8px;border-radius:10px}
+.verdict-desc{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:9px}
+.threat-tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;letter-spacing:.3px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:.5px solid var(--border)}
+.info-card{padding:11px 14px;background:var(--bg);transition:background .15s}
 .info-card:hover{background:var(--bg2)}
-.info-card-label{
-  font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
-  color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:5px;
-}
-.info-card-label svg{width:10px;height:10px}
-.info-card-value{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+.info-card-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.info-card-label svg{width:9px;height:9px}
+.info-card-value{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
 .info-card-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
-.info-card-badge{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;margin-top:4px;
-}
-
-/* SECURITY SECTION */
-.security-section{padding:12px 16px;border-bottom:.5px solid var(--border)}
-.section-label{
-  font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
-  color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;
-}
-.section-label svg{width:11px;height:11px}
-.signal-item{
-  display:flex;align-items:center;gap:8px;
-  padding:7px 10px;border-radius:8px;margin-bottom:4px;
-  background:var(--bg2);border:.5px solid var(--border);
-}
+.trust-row{padding:10px 14px;border-bottom:.5px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.trust-label-small{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.trust-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:.5px solid}
+.trust-badge svg{width:9px;height:9px}
+.trust-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.security-section{padding:11px 16px;border-bottom:.5px solid var(--border)}
+.section-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.section-label svg{width:10px;height:10px}
+.signal-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;margin-bottom:4px;background:var(--bg2);border:.5px solid var(--border)}
 .signal-item:last-child{margin-bottom:0}
 .signal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .signal-text{font-size:11px;color:var(--text2);flex:1}
 .signal-val{font-size:10px;font-weight:600;font-family:var(--mono)}
-
-/* RESCAN BUTTON */
-.rescan-btn{
-  width:calc(100% - 32px);margin:12px 16px;
-  padding:11px;border-radius:10px;
-  background:var(--bg3);border:.5px solid var(--border2);
-  color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;
-  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
-  letter-spacing:.3px;
-}
+.rescan-btn{width:calc(100% - 32px);margin:10px 16px 0;padding:10px;border-radius:9px;background:var(--bg3);border:.5px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
 .rescan-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.rescan-btn svg{width:13px;height:13px}
-
-/* FOOTER */
-.popup-footer{
-  padding:9px 16px;border-top:.5px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--bg2);
-}
+.rescan-btn svg{width:12px;height:12px}
+.open-dash{display:block;width:calc(100% - 32px);margin:10px 16px 0;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s}
+.open-dash:hover{opacity:.88}
+.popup-footer{padding:8px 16px;border-top:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);margin-top:10px}
 .footer-brand{font-size:10px;color:var(--text3);font-weight:500}
 .footer-brand em{color:var(--accent);font-style:normal;font-weight:600}
 .footer-time{font-size:10px;font-family:var(--mono);color:var(--text3)}
-
-/* OPEN DASHBOARD */
-.open-dash{
-  display:block;width:calc(100% - 32px);margin:0 16px 14px;
-  padding:12px;border-radius:10px;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));
-  color:#000;font-family:var(--font);font-size:13px;font-weight:700;
-  cursor:pointer;border:none;transition:opacity .2s,transform .1s;
-  letter-spacing:.2px;
-}
-.open-dash:hover{opacity:.9}
-.open-dash:active{transform:scale(.99)}
-
-/* STATES */
-.safe-color   {color:var(--accent)}
-.warn-color   {color:var(--amber)}
-.danger-color {color:var(--red)}
-.blue-color   {color:var(--blue)}
-
-.safe-bg    {background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.warn-bg    {background:var(--amber-dim); border-color:var(--amber); color:var(--amber)}
-.danger-bg  {background:var(--red-dim);   border-color:var(--red);   color:var(--red)}
-
-/* LOADING */
-.loading-screen{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:300px;gap:16px;
-}
-.spinner{
-  width:40px;height:40px;border-radius:50%;
-  border:2px solid var(--bg3);border-top-color:var(--accent);
-  animation:spin .7s linear infinite;
-}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px}
+.spinner{width:36px;height:36px;border-radius:50%;border:2px solid var(--bg3);border-top-color:var(--accent);animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:12px;color:var(--text3);font-family:var(--mono)}
-
-/* HISTORY VIEW */
+.loading-text{font-size:11px;color:var(--text3);font-family:var(--mono)}
 .hist-view{display:none;padding:12px 16px}
-.hist-item{
-  padding:9px 12px;border-radius:8px;margin-bottom:6px;
-  background:var(--bg2);border:.5px solid var(--border);
-  display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;
-}
-.hist-item:hover{background:var(--bg3)}
+.hist-view-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.hist-item{padding:8px 11px;border-radius:7px;margin-bottom:5px;background:var(--bg2);border:.5px solid var(--border);display:flex;align-items:center;gap:10px}
 .hist-url{flex:1;font-size:11px;font-family:var(--mono);color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hist-score{font-size:12px;font-weight:700;font-family:var(--mono)}
 .hist-time{font-size:10px;color:var(--text3);font-family:var(--mono)}
@@ -216,7 +86,6 @@ body{
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="logo">
     <div class="logo-icon">
@@ -230,428 +99,124 @@ body{
   <div class="header-right">
     <span class="ver-tag">v4.2</span>
     <span class="ai-tag">AI</span>
-    <div class="history-btn" onclick="toggleHistory()">
+    <button class="history-btn" id="fs-history-btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
       </svg>
       HISTORY
-    </div>
+    </button>
   </div>
 </div>
 
-<!-- URL BAR -->
-<div class="url-bar" id="url-display">Scanning current page…</div>
+<div class="url-bar" id="fs-url-display">Scanning current page…</div>
 
-<!-- MAIN CONTENT -->
-<div id="main-content">
-  <div class="loading-screen" id="loading">
+<div class="hist-view" id="fs-hist-view">
+  <div class="hist-view-label">Recent scans</div>
+  <div id="fs-hist-list"></div>
+</div>
+
+<div id="fs-main-content">
+  <div class="loading-screen" id="fs-loading">
     <div class="spinner"></div>
     <div class="loading-text">Analyzing URL…</div>
   </div>
-  <div id="result-view" style="display:none">
 
-    <!-- SCORE -->
+  <div id="fs-result-view" style="display:none">
     <div class="score-section">
       <div class="score-ring-wrap">
-        <svg width="90" height="90" viewBox="0 0 90 90">
-          <circle cx="45" cy="45" r="36" fill="none" stroke="#1e2430" stroke-width="7"/>
-          <circle cx="45" cy="45" r="36" fill="none" stroke-width="7"
-            stroke-linecap="round" stroke-dasharray="226" id="score-arc"
+        <svg width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r="36" fill="none" stroke="#1e2430" stroke-width="7"/>
+          <circle cx="44" cy="44" r="36" fill="none" stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="226" stroke-dashoffset="226" id="fs-score-arc"
             style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
         </svg>
         <div class="score-center">
-          <div class="score-num" id="score-num">--</div>
+          <div class="score-num" id="fs-score-num">--</div>
           <div class="score-denom">/100</div>
         </div>
       </div>
       <div class="score-info">
         <div class="verdict-row">
-          <div class="verdict-badge" id="verdict-badge">
+          <div class="verdict-badge" id="fs-verdict-badge">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
               <path d="M12 2L4 6v6c0 5.2 3.5 9.8 8 11 4.5-1.2 8-5.8 8-11V6z"/>
               <path d="M9 12l2 2 4-4"/>
             </svg>
-            <span id="verdict-text">SAFE</span>
+            <span id="fs-verdict-text">SAFE</span>
           </div>
-          <span class="risk-tag" id="risk-tag">LOW RISK</span>
+          <span class="risk-tag" id="fs-risk-tag">LOW RISK</span>
         </div>
-        <div class="verdict-desc" id="verdict-desc">No threats detected. Site appears legitimate.</div>
-        <div class="threat-tag" id="threat-tag">Safe</div>
+        <div class="verdict-desc" id="fs-verdict-desc">Analyzing…</div>
+        <div class="threat-tag" id="fs-threat-tag">Safe</div>
       </div>
     </div>
 
-    <!-- INFO GRID -->
     <div class="info-grid">
       <div class="info-card">
         <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-            <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
           DOMAIN
         </div>
-        <div class="info-card-value" id="card-domain">—</div>
-        <div class="info-card-sub" id="card-tld">—</div>
+        <div class="info-card-value" id="fs-card-domain">—</div>
+        <div class="info-card-sub" id="fs-card-tld">—</div>
       </div>
       <div class="info-card">
         <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           PROTOCOL
         </div>
-        <div class="info-card-value" id="card-protocol">—</div>
-        <div class="info-card-sub" id="card-protocol-sub">—</div>
+        <div class="info-card-value" id="fs-card-protocol">—</div>
+        <div class="info-card-sub" id="fs-card-protocol-sub">—</div>
       </div>
       <div class="info-card">
         <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
           SITE TYPE
         </div>
-        <div class="info-card-value" id="card-sitetype">—</div>
-        <div class="info-card-sub" id="card-sitetype-sub">—</div>
+        <div class="info-card-value" id="fs-card-sitetype">—</div>
+        <div class="info-card-sub" id="fs-card-sitetype-sub">—</div>
       </div>
       <div class="info-card">
         <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           DOMAIN AGE
         </div>
-        <div class="info-card-value" id="card-age">—</div>
-        <div class="info-card-sub" id="card-age-sub">—</div>
+        <div class="info-card-value" id="fs-card-age">—</div>
+        <div class="info-card-sub" id="fs-card-age-sub">—</div>
       </div>
     </div>
 
-    <!-- DOMAIN TRUST -->
-    <div class="info-grid" style="border-bottom:.5px solid var(--border)">
-      <div class="info-card" style="grid-column:1/-1">
-        <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4l3 3"/>
-          </svg>
-          DOMAIN TRUST LEVEL
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:2px">
-          <div class="info-card-badge" id="trust-badge" style="border:.5px solid">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M9 11l3 3L22 4"/>
-            </svg>
-            <span id="trust-label">Established</span>
-          </div>
-          <div class="info-card-sub" id="trust-sub">—</div>
-        </div>
+    <div class="trust-row">
+      <span class="trust-label-small">DOMAIN TRUST LEVEL</span>
+      <div class="trust-badge" id="fs-trust-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>
+        <span id="fs-trust-label">Established</span>
       </div>
+      <span class="trust-sub" id="fs-trust-sub">—</span>
     </div>
 
-    <!-- SECURITY ANALYSIS -->
     <div class="security-section">
       <div class="section-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <path d="M12 2L4 6v6c0 5.2 3.5 9.8 8 11 4.5-1.2 8-5.8 8-11V6z"/>
-        </svg>
-        SECURITY ANALYSIS — <span id="signal-count" style="color:var(--text)">1</span> SIGNAL(S)
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L4 6v6c0 5.2 3.5 9.8 8 11 4.5-1.2 8-5.8 8-11V6z"/></svg>
+        SECURITY ANALYSIS — <span id="fs-signal-count" style="color:var(--text);margin-left:3px">0</span> SIGNAL(S)
       </div>
-      <div id="signals-container"></div>
+      <div id="fs-signals-container"></div>
     </div>
 
-    <!-- RESCAN -->
-    <button class="rescan-btn" onclick="rescan()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <polyline points="23,4 23,10 17,10"/>
-        <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
-      </svg>
+    <button class="rescan-btn" id="fs-rescan-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
       RE-SCAN THIS PAGE
     </button>
 
-    <!-- OPEN DASHBOARD -->
-    <button class="open-dash" onclick="openDashboard()">Open Full Dashboard →</button>
+    <button class="open-dash" id="fs-open-dash-btn">Open Full Dashboard →</button>
 
-    <!-- FOOTER -->
     <div class="popup-footer">
       <div class="footer-brand"><em>FraudShield</em> v4.2 · AI Fraud Detection</div>
-      <div class="footer-time" id="footer-time">—</div>
+      <div class="footer-time" id="fs-footer-time">—</div>
     </div>
   </div>
 </div>
 
-<!-- HISTORY VIEW -->
-<div class="hist-view" id="hist-view">
-  <div class="section-label" style="margin-bottom:12px">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="11" height="11">
-      <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
-    </svg>
-    RECENT SCANS
-  </div>
-  <div id="hist-list"></div>
-</div>
-
-<script>
-const API_URL = "https://fraudshield-1-pkvb.onrender.com/check";
-
-let currentData = null;
-let scanHistory = [];
-let historyVisible = false;
-
-function getVerdict(score) {
-  if (score >= 85) return { label:"SAFE",          risk:"LOW RISK",      desc:"No threats detected. Site appears legitimate.", tag:"Safe",          cls:"safe"   };
-  if (score >= 65) return { label:"PROBABLY SAFE", risk:"LOW RISK",      desc:"Site appears mostly safe with minor signals.",  tag:"Probably Safe", cls:"safe"   };
-  if (score >= 45) return { label:"SUSPICIOUS",    risk:"MEDIUM RISK",   desc:"Unusual patterns detected. Proceed cautiously.", tag:"Suspicious",    cls:"warn"   };
-  return               { label:"DANGEROUS",     risk:"HIGH RISK",     desc:"Phishing or fraud indicators found. Avoid.",    tag:"Dangerous",     cls:"danger" };
-}
-
-function getColors(cls) {
-  if (cls === "safe")   return { main:"#00e5b0", dim:"rgba(0,229,176,0.12)"   };
-  if (cls === "warn")   return { main:"#f5a623", dim:"rgba(245,166,35,0.12)"  };
-  return                       { main:"#ff3d5a", dim:"rgba(255,61,90,0.12)"   };
-}
-
-function getDomainInfo(url) {
-  try {
-    var u = new URL(url);
-    var hostname = u.hostname;
-    var parts = hostname.replace(/^www\./,'').split('.');
-    var tld = parts.slice(-1)[0];
-    var isHttps = u.protocol === 'https:';
-    var tldMap = { com:"Commercial (.com)", org:"Organization (.org)", net:"Network (.net)", io:"Tech / IO", gov:"Government", edu:"Education", ru:"Russia (.ru)", xyz:"Generic (.xyz)", tk:"Tokelau (.tk)", info:"Generic (.info)" };
-    var tldLabel = tldMap[tld] || "Generic (." + tld + ")";
-    var trustedTlds = ["com","org","net","gov","edu","io"];
-    var isTrustedTld = trustedTlds.includes(tld);
-
-    var siteTypes = {
-      "google":   { type:"Search Engine / Portal", sub:"Consumer Tech" },
-      "youtube":  { type:"Video Platform",         sub:"Media / Streaming" },
-      "facebook": { type:"Social Network",         sub:"Social Media" },
-      "twitter":  { type:"Social Network",         sub:"Social Media" },
-      "github":   { type:"Dev Platform",           sub:"Software Development" },
-      "amazon":   { type:"E-Commerce",             sub:"Retail / Commerce" },
-      "microsoft":{ type:"Enterprise Software",    sub:"B2B Technology" },
-      "apple":    { type:"Consumer Tech",          sub:"Hardware / Software" },
-      "netflix":  { type:"Streaming Platform",     sub:"Entertainment" },
-      "yahoo":    { type:"Search Engine / Portal", sub:"Commercial Business" },
-      "paypal":   { type:"Financial Services",     sub:"Payment Processing" },
-    };
-    var siteType = { type:"Website", sub:"General" };
-    for (var k in siteTypes) {
-      if (hostname.includes(k)) { siteType = siteTypes[k]; break; }
-    }
-
-    return { hostname, tld, tldLabel, isHttps, isTrustedTld, siteType };
-  } catch(e) {
-    return { hostname: url, tld:"?", tldLabel:"Unknown", isHttps:false, isTrustedTld:false, siteType:{ type:"Unknown", sub:"" } };
-  }
-}
-
-function estimateDomainAge(hostname) {
-  var known = {
-    "google.com":31, "youtube.com":20, "facebook.com":20, "amazon.com":30,
-    "microsoft.com":40, "apple.com":40, "netflix.com":27, "github.com":16,
-    "stackoverflow.com":17, "yahoo.com":30, "paypal.com":25, "twitter.com":18,
-  };
-  var clean = hostname.replace(/^www\./,'');
-  for (var k in known) { if (clean.includes(k.split('.')[0])) return { yrs: known[k], est: String(2025 - known[k]) }; }
-  var isNewTld = [".xyz",".ru",".tk",".info",".online"].some(function(t){ return clean.endsWith(t); });
-  return isNewTld ? { yrs:0, est:"Recently registered" } : { yrs:2, est:"Est. ~2023" };
-}
-
-function buildSignals(score, domainInfo) {
-  var signals = [];
-  if (score >= 65) signals.push({ ok:true,  text:"No suspicious patterns detected" });
-  else if (score >= 45) signals.push({ ok:false, text:"Unusual URL patterns found" });
-  else { signals.push({ ok:false, text:"Phishing indicators detected" }); signals.push({ ok:false, text:"Suspicious domain structure" }); }
-
-  if (domainInfo.isHttps) signals.push({ ok:true, text:"HTTPS encryption active" });
-  else signals.push({ ok:false, text:"No HTTPS — connection not encrypted" });
-
-  if (domainInfo.isTrustedTld) signals.push({ ok:true, text:"Trusted top-level domain" });
-  else signals.push({ ok:false, text:"High-risk TLD detected" });
-
-  return signals;
-}
-
-function renderResult(url, score) {
-  var v = getVerdict(score);
-  var c = getColors(v.cls);
-  var domainInfo = getDomainInfo(url);
-  var age = estimateDomainAge(domainInfo.hostname);
-  var signals = buildSignals(score, domainInfo);
-  var arc = Math.round(226 * score / 100);
-
-  // Score ring
-  document.getElementById("score-num").textContent = score;
-  document.getElementById("score-num").style.color = c.main;
-  var arcEl = document.getElementById("score-arc");
-  arcEl.setAttribute("stroke", c.main);
-  arcEl.setAttribute("stroke-dashoffset", String(226 - arc));
-
-  // Verdict
-  var vb = document.getElementById("verdict-badge");
-  vb.style.color = c.main;
-  document.getElementById("verdict-text").textContent = v.label;
-  var rt = document.getElementById("risk-tag");
-  rt.textContent = v.risk;
-  rt.style.background = c.dim;
-  rt.style.color = c.main;
-  rt.style.border = ".5px solid " + c.main + "80";
-  document.getElementById("verdict-desc").textContent = v.desc;
-  var tt = document.getElementById("threat-tag");
-  tt.textContent = v.tag;
-  tt.style.background = c.dim;
-  tt.style.color = c.main;
-  tt.style.border = ".5px solid " + c.main;
-
-  // Domain
-  document.getElementById("card-domain").textContent = domainInfo.hostname.replace(/^www\./,'');
-  document.getElementById("card-tld").textContent = (domainInfo.isTrustedTld ? "✓ " : "⚠ ") + domainInfo.tldLabel;
-  document.getElementById("card-tld").style.color = domainInfo.isTrustedTld ? "var(--accent)" : "var(--amber)";
-
-  // Protocol
-  document.getElementById("card-protocol").textContent = domainInfo.isHttps ? "HTTPS" : "HTTP";
-  document.getElementById("card-protocol").style.color = domainInfo.isHttps ? "var(--accent)" : "var(--red)";
-  document.getElementById("card-protocol-sub").textContent = domainInfo.isHttps ? "Encrypted ✓" : "Not encrypted ✗";
-
-  // Site type
-  document.getElementById("card-sitetype").textContent = domainInfo.siteType.type;
-  document.getElementById("card-sitetype-sub").textContent = domainInfo.siteType.sub;
-
-  // Age
-  if (age.yrs > 0) {
-    document.getElementById("card-age").textContent = age.yrs + " yrs";
-    document.getElementById("card-age-sub").textContent = "Est. " + age.est;
-  } else {
-    document.getElementById("card-age").textContent = "< 1 yr";
-    document.getElementById("card-age").style.color = "var(--red)";
-    document.getElementById("card-age-sub").textContent = age.est;
-  }
-
-  // Trust
-  var isEstablished = age.yrs >= 3;
-  var tb = document.getElementById("trust-badge");
-  tb.style.background = isEstablished ? "var(--accent-dim)" : "var(--amber-dim)";
-  tb.style.color = isEstablished ? "var(--accent)" : "var(--amber)";
-  tb.style.borderColor = isEstablished ? "var(--accent)" : "var(--amber)";
-  document.getElementById("trust-label").textContent = isEstablished ? "Established" : "New Domain";
-  document.getElementById("trust-sub").textContent = age.yrs > 0 ? "~" + age.yrs + " yrs old (parent domain)" : "Recently registered";
-
-  // Signals
-  document.getElementById("signal-count").textContent = signals.length;
-  document.getElementById("signals-container").innerHTML = signals.map(function(s) {
-    return '<div class="signal-item">'
-      + '<div class="signal-dot" style="background:' + (s.ok ? "var(--accent)" : "var(--red)") + '"></div>'
-      + '<div class="signal-text">' + s.text + '</div>'
-      + '<div class="signal-val" style="color:' + (s.ok ? "var(--accent)" : "var(--red)") + '">' + (s.ok ? "✓" : "✗") + '</div>'
-      + '</div>';
-  }).join('');
-
-  // Footer time
-  var now = new Date();
-  document.getElementById("footer-time").textContent =
-    now.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true });
-
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("result-view").style.display = "block";
-}
-
-function toggleHistory() {
-  historyVisible = !historyVisible;
-  var hv = document.getElementById("hist-view");
-  var mc = document.getElementById("main-content");
-  if (historyVisible) {
-    hv.style.display = "block";
-    mc.style.display = "none";
-    renderHistory();
-  } else {
-    hv.style.display = "none";
-    mc.style.display = "block";
-  }
-}
-
-function renderHistory() {
-  var list = document.getElementById("hist-list");
-  if (!scanHistory.length) {
-    list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">No scans yet</div>';
-    return;
-  }
-  list.innerHTML = scanHistory.slice(0, 10).map(function(h) {
-    var c = getColors(getVerdict(h.score).cls);
-    return '<div class="hist-item">'
-      + '<div class="hist-url">' + h.url.replace(/^https?:\/\/(www\.)?/,'') + '</div>'
-      + '<div class="hist-score" style="color:' + c.main + '">' + h.score + '</div>'
-      + '<div class="hist-time">' + h.time + '</div>'
-      + '</div>';
-  }).join('');
-}
-
-function rescan() {
-  document.getElementById("loading").style.display = "flex";
-  document.getElementById("result-view").style.display = "none";
-  if (typeof chrome !== "undefined" && chrome.tabs) {
-    chrome.tabs.query({ active:true, currentWindow:true }, function(tabs) {
-      var url = tabs[0].url;
-      scanUrl(url);
-    });
-  }
-}
-
-function openDashboard() {
-  if (typeof chrome !== "undefined" && chrome.tabs) {
-    chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
-  } else {
-    window.open("dashboard.html", "_blank");
-  }
-}
-
-function scanUrl(url) {
-  document.getElementById("url-display").textContent = url;
-  fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url: url })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    var score = typeof data.safety_score === "number" ? Math.round(data.safety_score)
-              : typeof data.score        === "number" ? Math.round(data.score)
-              : 50;
-    var now = new Date();
-    var timeStr = now.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", hour12:true });
-    scanHistory.unshift({ url:url, score:score, time:timeStr });
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      chrome.storage.local.set({ scanHistory: scanHistory.slice(0,50) });
-    }
-    renderResult(url, score);
-  })
-  .catch(function() {
-    var lower = url.toLowerCase();
-    var fallback = lower.includes("google") || lower.includes("github") ? 92
-                 : lower.includes("phishing") || lower.includes("verify") ? 12 : 55;
-    renderResult(url, fallback);
-  });
-}
-
-// INIT
-(function init() {
-  if (typeof chrome !== "undefined" && chrome.tabs) {
-    chrome.storage.local.get(["scanHistory"], function(data) {
-      scanHistory = data.scanHistory || [];
-    });
-    chrome.tabs.query({ active:true, currentWindow:true }, function(tabs) {
-      var url = tabs[0] && tabs[0].url ? tabs[0].url : "https://example.com";
-      scanUrl(url);
-    });
-  } else {
-    // Demo mode
-    setTimeout(function() {
-      scanUrl("https://in.search.yahoo.com/search?fr=mcafee&type=E210IN714G91913&p=yahoo");
-    }, 800);
-  }
-})();
-</script>
+<script src="popup.js"></script>
 </body>
 </html>
