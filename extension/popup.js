@@ -1,237 +1,101 @@
-// popup.js - FraudShield v4.2
+// popup.js - FraudShield v3.1
 const API_URL = "https://fraudshield-1-pkvb.onrender.com";
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 5000;
 
-// ── Helpers ────────────────────────────────────────────────────────
-function scoreColor(s) {
-  if (s >= 85) return "#00d4aa";
-  if (s >= 65) return "#f59e0b";
-  if (s >= 45) return "#f97316";
-  return "#ff4d6d";
-}
-
-function scoreVerdict(s) {
-  if (s >= 85) return "✅ Safe";
-  if (s >= 65) return "⚠️ Probably Safe";
-  if (s >= 45) return "⚠️ Suspicious";
-  if (s >= 25) return "🚨 Likely Phishing";
-  return "🔴 Malicious";
-}
-
-function showStatus(msg, type = "info") {
-  const el = document.getElementById("status-msg");
-  if (!el) return;
-  el.textContent = msg;
-  el.className = `status ${type}`;
-  el.style.display = "block";
-  setTimeout(() => { el.style.display = "none"; }, 3000);
-}
-
-// ── Score ring ──────────────────────────────────────────────────────
-function renderScore(score, verdict, url) {
-  const ring  = document.getElementById("score-ring");
-  const numEl = document.getElementById("score-number");
-  const lblEl = document.getElementById("verdict-label");
-  const urlEl = document.getElementById("scanned-url");
-  const color = scoreColor(score);
-  if (ring)  { ring.style.borderColor = color; ring.classList.remove("scanning"); }
-  if (numEl) { numEl.textContent = score; numEl.style.color = color; }
-  if (lblEl) { lblEl.textContent = verdict; lblEl.style.color = color; }
-  if (urlEl) { urlEl.textContent = url; }
-}
-
-// ── Source breakdown panel (shown below score ring) ─────────────────
-function renderSourceBreakdown(data) {
-  const container = document.getElementById("source-breakdown");
-  if (!container) return;
-
-  const mlScore   = data.ml_score ?? data.safety_score ?? 0;
-  const vt        = data.virustotal || {};
-  const pt        = data.phishtank  || {};
-  const finalScore = data.safety_score ?? 0;
-
-  // ML score color
-  const mlColor = scoreColor(mlScore);
-
-  // VT color
-  const vtFlagged = vt.flagged_engines ?? 0;
-  const vtTotal   = vt.total_engines   ?? 0;
-  const vtColor   = vtFlagged === 0 ? "#00d4aa" : vtFlagged < 3 ? "#f59e0b" : "#ff4d6d";
-  const vtText    = vtTotal > 0
-    ? (vtFlagged === 0 ? `✅ 0/${vtTotal} engines flagged` : `⚠️ ${vtFlagged}/${vtTotal} flagged`)
-    : vt.result || "⏳ Checking...";
-
-  // PhishTank color
-  const ptInDB    = pt.in_database ?? false;
-  const ptColor   = ptInDB ? "#ff4d6d" : "#00d4aa";
-  const ptText    = ptInDB
-    ? "🔴 Found in phishing database"
-    : `✅ Not in database (${(pt.dataset_size || 0).toLocaleString()} URLs checked)`;
-
-  container.innerHTML = `
-    <div class="source-panel">
-      <div class="source-title">🔍 Analysis Breakdown</div>
-
-      <div class="source-row">
-        <div class="source-label">🤖 ML Model</div>
-        <div class="source-value" style="color:${mlColor}">${mlScore}/100</div>
-      </div>
-
-      <div class="source-row">
-        <div class="source-label">🦠 VirusTotal</div>
-        <div class="source-value" style="color:${vtColor};font-size:10px">${vtText}</div>
-      </div>
-
-      <div class="source-row">
-        <div class="source-label">🎣 PhishTank</div>
-        <div class="source-value" style="color:${ptColor};font-size:10px">${ptText}</div>
-      </div>
-
-      <div class="source-divider"></div>
-
-      <div class="source-row source-final">
-        <div class="source-label" style="font-weight:700">Final Score</div>
-        <div class="source-value" style="color:${scoreColor(finalScore)};font-weight:700;font-size:15px">${finalScore}/100</div>
-      </div>
-    </div>
-  `;
-  container.style.display = "block";
-}
-
-// ── History table ───────────────────────────────────────────────────
-function renderHistory(history) {
-  const tbody = document.getElementById("popup-history");
-  if (!tbody) return;
-  if (!history || history.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:#555;padding:14px;font-size:11px">No scans yet</td></tr>`;
-    return;
-  }
-  const seen = new Set();
-  const deduped = [];
-  for (const entry of history) {
-    const domain = entry.domain || entry.url;
-    if (!seen.has(domain)) { seen.add(domain); deduped.push(entry); }
-    if (deduped.length >= 5) break;
-  }
-  tbody.innerHTML = deduped.map(e => {
-    const score   = e.score ?? 0;
-    const color   = scoreColor(score);
-    const verdict = scoreVerdict(score);
-    const domain  = e.domain || (() => { try { return new URL(e.url).hostname; } catch(_) { return e.url; } })();
-    return `<tr>
-      <td class="url-cell" title="${e.url}">${domain}</td>
-      <td style="color:${color};font-weight:700;font-family:var(--mono)">${score}</td>
-      <td style="color:${color};font-size:10px">${verdict}</td>
-    </tr>`;
-  }).join("");
-}
-
-// ── Save to history ─────────────────────────────────────────────────
-function saveToHistory(data, url) {
-  chrome.storage.local.get("scanHistory", (result) => {
-    const history = result.scanHistory || [];
-    const now = Date.now();
-    const recent = history.find(e => e.url === url && (now - new Date(e.timestamp).getTime()) < 60000);
-    if (recent) return;
-    history.unshift({
-      url,
-      score:     data.safety_score,
-      category:  data.category,
-      risk:      data.risk_level,
-      ml_score:  data.ml_score,
-      site_type: data.domain_info?.site_type ?? "Unknown",
-      domain:    data.domain_info?.domain    ?? "",
-      protocol:  data.domain_info?.protocol  ?? "",
-      timestamp: new Date().toISOString()
-    });
-    if (history.length > 200) history.pop();
-    chrome.storage.local.set({ scanHistory: history });
+document.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("scanBtn").addEventListener("click", requestScan);
+  document.getElementById("historyBtn").addEventListener("click", () => {
+    chrome.tabs.create({ url: chrome.runtime.getURL("history.html") });
   });
-}
+  document.getElementById("exportCSVBtn").addEventListener("click", () => {
+    chrome.storage.local.get("scanHistory", (result) => exportCSV(result.scanHistory || []));
+  });
+  document.getElementById("exportPDFBtn").addEventListener("click", () => {
+    chrome.storage.local.get("scanHistory", (result) => exportPDF(result.scanHistory || []));
+  });
 
-// ── Fetch with retry ────────────────────────────────────────────────
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const url = tabs[0]?.url || "";
+  document.getElementById("urlDisplay").textContent = url || "No URL";
+
+  if (url && !url.startsWith("chrome://") && !url.startsWith("chrome-extension://")) {
+    requestScan();
+  } else {
+    showError("Navigate to a website first.");
+  }
+});
+
 async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      showLoading(attempt);
       const res = await fetch(url, options);
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       return res;
     } catch (err) {
       if (attempt === retries) throw err;
-      showStatus(`Server waking up... attempt ${attempt}/${retries}`, "info");
-      await new Promise(r => setTimeout(r, RETRY_DELAY_MS));
+      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
     }
   }
 }
 
-// ── Main scan ────────────────────────────────────────────────────────
 async function requestScan() {
-  const btn   = document.getElementById("btn-scan");
-  const ring  = document.getElementById("score-ring");
-  const numEl = document.getElementById("score-number");
-  const lblEl = document.getElementById("verdict-label");
-  const breakdown = document.getElementById("source-breakdown");
-
-  if (btn) btn.disabled = true;
-  if (ring)  { ring.style.borderColor = ""; ring.classList.add("scanning"); }
-  if (numEl) { numEl.textContent = "…"; numEl.style.color = "var(--text3)"; }
-  if (lblEl) { lblEl.textContent = "Scanning…"; lblEl.style.color = "var(--text3)"; }
-  if (breakdown) breakdown.style.display = "none";
-
+  const btn = document.getElementById("scanBtn");
+  btn.disabled = true;
   try {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const url  = tabs[0]?.url || "";
-
+    const url = tabs[0]?.url || "";
     if (!url || url.startsWith("chrome://") || url.startsWith("chrome-extension://")) {
-      showStatus("Navigate to a real website first.", "error");
-      if (ring)  ring.classList.remove("scanning");
-      if (numEl) numEl.textContent = "—";
-      if (lblEl) lblEl.textContent = "Not a webpage";
-      if (btn)   btn.disabled = false;
+      showError("Navigate to a real website first.");
+      btn.disabled = false;
       return;
     }
-
-    document.getElementById("scanned-url").textContent = url;
-    showStatus("Checking ML + VirusTotal + PhishTank…", "info");
-
-    const res  = await fetchWithRetry(`${API_URL}/check`, {
-      method:  "POST",
+    const res = await fetchWithRetry(`${API_URL}/check`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ url })
+      body: JSON.stringify({ url })
     });
     const data = await res.json();
-    const score   = data.safety_score ?? 50;
-    const verdict = scoreVerdict(score);
-
-    renderScore(score, verdict, url);
-    renderSourceBreakdown(data);
+    document.getElementById("scanTime").textContent = new Date().toLocaleTimeString();
+    showResult(data);
     saveToHistory(data, url);
-    chrome.storage.local.get("scanHistory", r => renderHistory(r.scanHistory || []));
-
-    if (score >= 85)       showStatus("Site appears safe!", "success");
-    else if (score >= 65)  showStatus("Low-medium risk detected.", "info");
-    else                   showStatus("Risk detected — stay cautious!", "error");
-
   } catch (err) {
-    showStatus("Backend unreachable. Please retry in 30s.", "error");
-    if (ring)  ring.classList.remove("scanning");
-    if (numEl) numEl.textContent = "!";
-    if (lblEl) { lblEl.textContent = "Error"; lblEl.style.color = "#ff4d6d"; }
+    showError("⚠️ Backend unreachable after 3 attempts.\nThe server may still be waking up.\nPlease wait 30 seconds and click Scan again.");
   }
-
-  if (btn) btn.disabled = false;
+  btn.disabled = false;
 }
 
-// ── Export CSV ───────────────────────────────────────────────────────
+function showLoading(attempt = 1) {
+  const msg = attempt === 1 ? "Analyzing with AI..." : `Server waking up... (attempt ${attempt}/${MAX_RETRIES})`;
+  document.getElementById("content").innerHTML = `<div class="loading"><div class="spinner"></div>${msg}</div>`;
+}
+
+function showError(msg) {
+  document.getElementById("content").innerHTML = `<div class="error-msg">⚠️ ${msg}</div>`;
+}
+
+function saveToHistory(data, url) {
+  chrome.storage.local.get("scanHistory", (result) => {
+    const history = result.scanHistory || [];
+    history.push({
+      url, score: data.safety_score, category: data.category, risk: data.risk_level,
+      site_type: data.domain_info?.site_type ?? "Unknown",
+      domain: data.domain_info?.domain ?? "", protocol: data.domain_info?.protocol ?? "",
+      timestamp: new Date().toISOString()
+    });
+    if (history.length > 200) history.shift();
+    chrome.storage.local.set({ scanHistory: history });
+  });
+}
+
+// ── Export CSV ─────────────────────────────────────────
 function exportCSV(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
-  const headers = ["URL","Safety Score","ML Score","Category","Risk Level","Domain","Protocol","Date & Time"];
+  const headers = ["URL","Safety Score","Category","Risk Level","Date & Time"];
   const rows = history.map(e => {
     const url = `"${(e.url||"").replace(/"/g,'""')}"`;
-    return [url, e.score??"", e.ml_score??"", `"${e.category??""}"`, `"${e.risk??""}"`,
-            `"${e.domain??""}"`, `"${e.protocol??""}"`,
-            `"${new Date(e.timestamp).toLocaleString()}"`].join(",");
+    return [url, e.score??"", `"${e.category??""}"`, `"${e.risk??""}"`, `"${new Date(e.timestamp).toLocaleString()}"`].join(",");
   });
   const blob = new Blob([[headers.join(","), ...rows].join("\n")], { type:"text/csv;charset=utf-8;" });
   const a = document.createElement("a");
@@ -240,69 +104,125 @@ function exportCSV(history) {
   a.click();
 }
 
-// ── Export PDF ───────────────────────────────────────────────────────
+// ── Export PDF ─────────────────────────────────────────
 function exportPDF(history) {
   if (!history || history.length === 0) { alert("No scan history to export."); return; }
   const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const rows = history.map((e,i) => {
     const score = e.score ?? 0;
     const color = score>=85?"#00aa55":score>=65?"#cc9900":score>=45?"#cc6600":"#cc2222";
-    return `<tr><td>${i+1}</td><td class="url-cell">${esc(e.url||"")}</td>
-      <td><span style="color:${color};font-weight:700">${score}/100</span></td>
-      <td>${esc(e.category||"")}</td><td>${esc(e.risk||"")}</td>
-      <td>${new Date(e.timestamp).toLocaleString()}</td></tr>`;
+    return `<tr><td>${i+1}</td><td class="url-cell">${esc(e.url||"")}</td><td><span style="color:${color};font-weight:700">${score}/100</span></td><td>${esc(e.category||"")}</td><td>${esc(e.risk||"")}</td><td>${new Date(e.timestamp).toLocaleString()}</td></tr>`;
   }).join("");
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>FraudShield History</title>
-  <style>body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1a1a1a}
-  .brand{font-size:24px;font-weight:800;color:#00aa55}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{background:#f5f5f5;padding:10px 12px;text-align:left;border-bottom:2px solid #e0e0e0}
-  td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:top}
-  .url-cell{max-width:280px;word-break:break-all;color:#1a5fa8;font-size:12px}
-  tr:nth-child(even) td{background:#fafafa}
-  .footer{margin-top:24px;text-align:center;color:#aaa;font-size:12px}</style></head>
-  <body><div class="brand">FraudShield <span style="font-size:14px;color:#888">v4.2 AI</span></div>
-  <p style="color:#666;margin:4px 0 16px">Generated: ${new Date().toLocaleString()} | Total: ${history.length} scans</p>
+  <style>body{font-family:'Segoe UI',sans-serif;padding:32px;color:#1a1a1a}.brand{font-size:24px;font-weight:800;color:#00aa55}
+  table{width:100%;border-collapse:collapse;font-size:13px}th{background:#f5f5f5;padding:10px 12px;text-align:left;border-bottom:2px solid #e0e0e0}
+  td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:top}.url-cell{max-width:280px;word-break:break-all;color:#1a5fa8;font-size:12px}
+  tr:nth-child(even) td{background:#fafafa}.footer{margin-top:24px;text-align:center;color:#aaa;font-size:12px}</style></head>
+  <body><div class="brand">FraudShield <span style="font-size:14px;color:#888">v3.0 AI</span></div>
+  <p style="color:#666;margin:4px 0 16px">Scan History — Generated: ${new Date().toLocaleString()} | Total: ${history.length}</p>
   <table><thead><tr><th>#</th><th>URL</th><th>Score</th><th>Category</th><th>Risk</th><th>Date</th></tr></thead>
   <tbody>${rows}</tbody></table>
-  <div class="footer">FraudShield v4.2 — ML + VirusTotal + PhishTank</div></body></html>`;
+  <div class="footer">FraudShield v3.0 — AI Fraud Detection</div></body></html>`;
   const win = window.open("","_blank");
   win.document.write(html);
   win.document.close();
   setTimeout(() => win.print(), 500);
 }
 
-// ── Init ─────────────────────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", async () => {
-  document.getElementById("btn-scan")?.addEventListener("click", requestScan);
-  document.getElementById("btn-dashboard")?.addEventListener("click", () => {
-    chrome.tabs.create({ url: chrome.runtime.getURL("dashboard.html") });
-  });
-  document.getElementById("btn-allowlist")?.addEventListener("click", async () => {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const url  = tabs[0]?.url || "";
-    try { showStatus(`Allowed: ${new URL(url).hostname}`, "success"); } catch(_) {}
-  });
-  document.getElementById("btn-blocklist")?.addEventListener("click", async () => {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const url  = tabs[0]?.url || "";
-    try { showStatus(`Blocked: ${new URL(url).hostname}`, "error"); } catch(_) {}
-  });
+function showResult(data) {
+  const score = data.safety_score ?? 50;
+  const flags = data.flags ?? [];
+  const category = data.category ?? "Unknown";
+  const riskLevel = data.risk_level ?? "";
+  const domainInfo = data.domain_info ?? {};
+  const age = domainInfo.age ?? {};
 
-  chrome.storage.local.get("scanHistory", r => renderHistory(r.scanHistory || []));
-
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url  = tabs[0]?.url || "";
-  if (url && !url.startsWith("chrome://") && !url.startsWith("chrome-extension://")) {
-    requestScan();
+  let color, statusLabel, statusDesc, catStyle, riskStyle;
+  if (score >= 85) {
+    color="#00ff88"; statusLabel="✅ SAFE"; statusDesc="No threats detected. Site appears legitimate.";
+    catStyle="background:#00ff8815;color:#00ff88;border:1px solid #00ff8830"; riskStyle="background:#00ff8815;color:#00ff88;";
+  } else if (score >= 65) {
+    color="#00d4aa"; statusLabel="✅ PROBABLY SAFE"; statusDesc="Low risk. Appears mostly legitimate.";
+    catStyle="background:#00d4aa15;color:#00d4aa;border:1px solid #00d4aa30"; riskStyle="background:#00d4aa15;color:#00d4aa;";
+  } else if (score >= 45) {
+    color="#ffd600"; statusLabel="⚠️ SUSPICIOUS"; statusDesc="Risk factors found. Proceed with caution.";
+    catStyle="background:#ffd60015;color:#ffd600;border:1px solid #ffd60030"; riskStyle="background:#ffd60015;color:#ffd600;";
+  } else if (score >= 25) {
+    color="#ff8800"; statusLabel="🚨 LIKELY PHISHING"; statusDesc="High risk! This may be a phishing attempt.";
+    catStyle="background:#ff880015;color:#ff8800;border:1px solid #ff880030"; riskStyle="background:#ff880015;color:#ff8800;";
   } else {
-    const ring  = document.getElementById("score-ring");
-    const numEl = document.getElementById("score-number");
-    const lblEl = document.getElementById("verdict-label");
-    const urlEl = document.getElementById("scanned-url");
-    if (ring)  ring.classList.remove("scanning");
-    if (numEl) numEl.textContent = "—";
-    if (lblEl) lblEl.textContent = "Open a website to scan";
-    if (urlEl) urlEl.textContent = "Navigate to a page first";
+    color="#ff3d5a"; statusLabel="🔴 MALICIOUS"; statusDesc="DANGER! Do not enter any information here.";
+    catStyle="background:#ff3d5a15;color:#ff3d5a;border:1px solid #ff3d5a30"; riskStyle="background:#ff3d5a15;color:#ff3d5a;";
   }
-});
+
+  const circumference = 2 * Math.PI * 36;
+  const offset = circumference - (score / 100) * circumference;
+
+  let ageBadge = "";
+  if (age.trust==="established") ageBadge=`<span class="trust-badge trust-established">✓ Established</span>`;
+  else if (age.trust==="relatively new") ageBadge=`<span class="trust-badge trust-new">⚡ Relatively New</span>`;
+  else if (age.trust==="untrustworthy") ageBadge=`<span class="trust-badge trust-bad">⚠ Suspicious TLD</span>`;
+  else ageBadge=`<span class="trust-badge trust-unknown">? Age Unverified</span>`;
+
+  const proto = domainInfo.protocol ?? "HTTP";
+  const protoClass = proto === "HTTPS" ? "proto-https" : "proto-http";
+  const tldTrust = domainInfo.tld_trust ?? "";
+  let tldColor = "#6b7d99";
+  if (tldTrust==="Trusted TLD") tldColor="#00ff88";
+  if (tldTrust==="Suspicious TLD") tldColor="#ff3d5a";
+
+  const flagsHTML = flags.length > 0
+    ? flags.map(f => `<div class="flag-item">${f.message}</div>`).join("")
+    : `<div class="flag-item">✅ No suspicious patterns detected</div>`;
+
+  document.getElementById("content").innerHTML = `
+    <div class="score-row">
+      <div class="score-ring">
+        <svg width="84" height="84" viewBox="0 0 84 84">
+          <circle class="track" cx="42" cy="42" r="36"/>
+          <circle class="fill" cx="42" cy="42" r="36" stroke="${color}" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" style="color:${color}">${score}</div>
+          <div class="score-den">/ 100</div>
+        </div>
+      </div>
+      <div class="score-info">
+        <div class="status-tag" style="color:${color}">${statusLabel}</div>
+        <div class="risk-tag" style="${riskStyle}">${riskLevel}</div>
+        <div class="status-desc">${statusDesc}</div>
+        <span class="category-pill" style="${catStyle}">${category}</span>
+      </div>
+    </div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">🌐 Domain</div>
+        <div class="info-value">${domainInfo.domain ?? "Unknown"}</div>
+        <div class="info-sub" style="color:${tldColor}">${domainInfo.tld ?? ""} · ${tldTrust}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">🔒 Protocol</div>
+        <div class="info-value ${protoClass}">${proto}</div>
+        <div class="info-sub">${proto==="HTTPS"?"Encrypted ✓":"Not Encrypted ✗"}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">🏷️ Site Type</div>
+        <div class="info-value" style="font-size:10px">${domainInfo.site_type ?? "Unknown"}</div>
+        <div class="info-sub">${domainInfo.org_type ?? ""}</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">📅 Domain Age</div>
+        <div class="info-value">${age.age_years != null ? age.age_years + " yrs" : "Unknown"}</div>
+        <div class="info-sub">${age.estimated_year ? "Est. "+age.estimated_year : age.age_label ?? ""}</div>
+      </div>
+    </div>
+    <div class="info-card-full">
+      <div class="info-label">🛡️ Domain Trust Level</div>
+      <div style="margin-top:4px">${ageBadge}</div>
+      <div class="info-sub" style="margin-top:5px">${age.age_label ?? "Verify with WHOIS for exact age"}</div>
+    </div>
+    <div class="flags-section">
+      <div class="section-title">⚡ Security Analysis — ${flags.length} signal(s)</div>
+      ${flagsHTML}
+    </div>`;
+}
