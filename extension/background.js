@@ -26,12 +26,22 @@ function fetchWithTimeout(url,options,ms){
 }
 
 // ── Real WHOIS (RDAP multi-source fallback) ───────────────────────────────────
+const RDAP_SERVERS={
+  "com":"https://rdap.verisign.com/com/v1/","net":"https://rdap.verisign.com/net/v1/",
+  "org":"https://rdap.publicinterestregistry.org/rdap/","io":"https://rdap.nic.io/",
+  "co":"https://rdap.nic.co/","ai":"https://rdap.nic.ai/","dev":"https://rdap.nic.google/",
+  "app":"https://rdap.nic.google/","in":"https://rdap.registry.in/",
+  "uk":"https://rdap.nominet.uk/","de":"https://rdap.denic.de/",
+  "xyz":"https://rdap.nic.xyz/","info":"https://rdap.afilias.net/rdap/",
+};
+
 async function checkWHOIS(hostname){
   const apex=hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
-
-  // Try rdap.org first
+  const tld=apex.split(".").pop();
+  const server=RDAP_SERVERS[tld];
+  if(!server) return{available:false};
   try{
-    const resp=await fetchWithTimeout(`https://rdap.org/domain/${apex}`,{headers:{Accept:"application/json"}},CONFIG.WHOIS_TIMEOUT);
+    const resp=await fetchWithTimeout(`${server}domain/${apex}`,{headers:{Accept:"application/rdap+json"}},CONFIG.WHOIS_TIMEOUT);
     if(resp.ok){
       const d=await resp.json();
       const events=d?.events||[];
@@ -48,25 +58,6 @@ async function checkWHOIS(hostname){
       }
     }
   }catch(e){}
-
-  // Fallback: whoisjson.com
-  try{
-    const resp2=await fetchWithTimeout(`https://whoisjson.com/api/v1/whois?domain=${apex}`,{headers:{Accept:"application/json"}},CONFIG.WHOIS_TIMEOUT);
-    if(resp2.ok){
-      const d2=await resp2.json();
-      const raw=d2?.created||d2?.creation_date||d2?.registered||null;
-      if(raw){
-        const created=new Date(Array.isArray(raw)?raw[0]:raw);
-        if(!isNaN(created)){
-          const diffDays=Math.floor((Date.now()-created)/86400000);
-          const diffMos=Math.floor(diffDays/30);
-          const diffYrs=Math.floor(diffDays/365);
-          return{available:true,diffDays,diffMos,diffYrs,created:created.toISOString().split("T")[0]};
-        }
-      }
-    }
-  }catch(e){}
-
   return{available:false};
 }
 

@@ -104,66 +104,64 @@ async function checkVirusTotal(url){
 }
 
 // ── REAL WHOIS (multi-source fallback) ───────────────────────────────────────
+// ── WHOIS via IANA RDAP Bootstrap (no redirects, CSP-safe) ───────────────────
+// Maps common TLDs directly to their RDAP endpoint — avoids rdap.org redirects
+const RDAP_SERVERS = {
+  "com":"https://rdap.verisign.com/com/v1/",
+  "net":"https://rdap.verisign.com/net/v1/",
+  "org":"https://rdap.publicinterestregistry.org/rdap/",
+  "io" :"https://rdap.nic.io/",
+  "co" :"https://rdap.nic.co/",
+  "ai" :"https://rdap.nic.ai/",
+  "dev":"https://rdap.nic.google/",
+  "app":"https://rdap.nic.google/",
+  "in" :"https://rdap.registry.in/",
+  "uk" :"https://rdap.nominet.uk/",
+  "de" :"https://rdap.denic.de/",
+  "xyz":"https://rdap.nic.xyz/",
+  "info":"https://rdap.afilias.net/rdap/",
+};
+
 async function checkWHOIS(hostname){
-  const apex=hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
+  const apex = hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
+  const tld  = apex.split(".").pop();
+  const server = RDAP_SERVERS[tld];
 
-  // Sources tried in order — first success wins
-  const sources = [
-    `https://rdap.org/domain/${apex}`,
-    `https://data.iana.org/rdap/dns.json`, // fallback to detect IANA (won't give age but shows it's live)
-  ];
-
-  // Try rdap.org (free, no key, JSON)
-  try {
-    const resp = await fetchWithTimeout(
-      `https://rdap.org/domain/${apex}`,
-      { headers: { Accept: "application/json" } },
-      CONFIG.WHOIS_TIMEOUT
-    );
-    if (resp.ok) {
-      const d = await resp.json();
-      // RDAP events array: look for "registration" event
-      const events = d?.events || [];
-      const regEvent = events.find(e => e.eventAction === "registration");
-      const raw = regEvent?.eventDate || null;
-      if (raw) {
-        const created = new Date(raw);
-        if (!isNaN(created)) {
-          const diffDays = Math.floor((Date.now() - created) / 86400000);
-          const diffMos  = Math.floor(diffDays / 30);
-          const diffYrs  = Math.floor(diffDays / 365);
-          let ageLabel, ageSub, ageThreat;
-          if (diffDays < 30)    { ageLabel = diffDays + "d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-          else if (diffMos < 6) { ageLabel = diffMos + "mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
-          else if (diffMos < 12){ ageLabel = diffMos + "mo";  ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
-          else                  { ageLabel = diffYrs + (diffYrs === 1 ? " yr" : " yrs"); ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
-          const registrar = d?.entities?.find(e => e.roles?.includes("registrar"))?.vcardArray?.[1]?.find(v => v[0] === "fn")?.[3] || null;
-          return { available: true, ageLabel, ageSub, ageThreat, diffDays, diffMos, diffYrs,
-                   created: created.toISOString().split("T")[0], registrar };
+  if (server) {
+    try {
+      const resp = await fetchWithTimeout(
+        `${server}domain/${apex}`,
+        { headers: { Accept: "application/rdap+json" } },
+        CONFIG.WHOIS_TIMEOUT
+      );
+      if (resp.ok) {
+        const d = await resp.json();
+        const events = d?.events || [];
+        const regEvent = events.find(e => e.eventAction === "registration");
+        const raw = regEvent?.eventDate || null;
+        if (raw) {
+          const created = new Date(raw);
+          if (!isNaN(created)) {
+            const diffDays = Math.floor((Date.now() - created) / 86400000);
+            const diffMos  = Math.floor(diffDays / 30);
+            const diffYrs  = Math.floor(diffDays / 365);
+            let ageLabel, ageSub, ageThreat;
+            if (diffDays < 30)    { ageLabel = diffDays + "d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
+            else if (diffMos < 6) { ageLabel = diffMos + "mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
+            else if (diffMos < 12){ ageLabel = diffMos + "mo";  ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
+            else                  { ageLabel = diffYrs + (diffYrs === 1 ? " yr" : " yrs"); ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
+            const registrar = d?.entities?.find(e => e.roles?.includes("registrar"))?.vcardArray?.[1]?.find(v => v[0] === "fn")?.[3] || null;
+            return { available: true, ageLabel, ageSub, ageThreat, diffDays, diffMos, diffYrs,
+                     created: created.toISOString().split("T")[0], registrar };
+          }
         }
       }
-    }
-  } catch(e) {}
+    } catch(e) {}
+  }
 
-  // Try whoisjson.com (free, no key)
-  try {
-    const resp2 = await fetchWithTimeout(
-      `https://whoisjson.com/api/v1/whois?domain=${apex}`,
-      { headers: { Accept: "application/json" } },
-      CONFIG.WHOIS_TIMEOUT
-    );
-    if (resp2.ok) {
-      const d2 = await resp2.json();
-      const raw = d2?.created || d2?.creation_date || d2?.registered || null;
-      if (raw) {
-        const created = new Date(Array.isArray(raw) ? raw[0] : raw);
-        if (!isNaN(created)) {
-          const diffDays = Math.floor((Date.now() - created) / 86400000);
-          const diffMos  = Math.floor(diffDays / 30);
-          const diffYrs  = Math.floor(diffDays / 365);
-          let ageLabel, ageSub, ageThreat;
-          if (diffDays < 30)    { ageLabel = diffDays + "d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-          else if (diffMos < 6) { ageLabel = diffMos + "mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
+  // Unknown TLD or failed — return unavailable gracefully
+  return { available: false };
+}
           else if (diffMos < 12){ ageLabel = diffMos + "mo";  ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
           else                  { ageLabel = diffYrs + (diffYrs === 1 ? " yr" : " yrs"); ageSub = "Est. " + created.getFullYear(); ageThreat = "low"; }
           return { available: true, ageLabel, ageSub, ageThreat, diffDays, diffMos, diffYrs,
