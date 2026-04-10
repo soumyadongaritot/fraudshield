@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>FraudShield</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -12,80 +12,110 @@
   --border:#ffffff0f;--border2:#ffffff18;--border3:#ffffff28;
   --text:#dde1f0;--text2:#7c82a0;--text3:#454a60;
   --accent:#00e5b0;--accent2:#00b88d;
-  --accent-dim:rgba(0,229,176,0.12);--amber-dim:rgba(245,166,35,0.12);
+  --accent-dim:rgba(0,229,176,0.12);
   --red:#ff3d5a;--amber:#f5a623;--purple:#9d6fff;
   --mono:'JetBrains Mono',monospace;--font:'Space Grotesk',sans-serif;
 }
-body{width:380px;min-height:520px;font-family:var(--font);background:var(--bg);color:var(--text);overflow:hidden;font-size:13px}
+body{width:380px;min-height:520px;font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;font-size:13px}
+
+/* ── HEADER ── */
 .header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 12px;border-bottom:.5px solid var(--border2);background:linear-gradient(180deg,#161a24 0%,var(--bg) 100%)}
 .logo{display:flex;align-items:center;gap:9px}
 .logo-icon{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-icon svg{width:16px;height:16px}
 .logo-name{font-size:16px;font-weight:700;letter-spacing:-.3px}
 .logo-name em{color:var(--accent);font-style:normal}
-.header-right{display:flex;align-items:center;gap:8px}
+.header-right{display:flex;align-items:center;gap:7px}
 .ver-tag{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:20px;background:var(--bg3);border:.5px solid var(--border3);color:var(--text3)}
 .ai-tag{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;background:rgba(157,111,255,0.12);border:.5px solid var(--purple);color:var(--purple);letter-spacing:.5px}
-.history-btn{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.6px;padding:4px 10px;border-radius:6px;cursor:pointer;background:var(--bg3);border:.5px solid var(--border3);color:var(--text2);transition:all .15s}
+.history-btn{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.6px;padding:4px 10px;border-radius:6px;cursor:pointer;background:var(--bg3);border:.5px solid var(--border3);color:var(--text2);transition:all .15s;font-family:var(--font)}
 .history-btn:hover{color:var(--accent);border-color:var(--accent)}
-.history-btn svg{width:11px;height:11px}
+
+/* ── URL BAR ── */
 .url-bar{padding:9px 16px;background:var(--bg2);border-bottom:.5px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── HISTORY PANEL ── */
+#hist-panel{display:none;padding:12px 16px}
+#hist-panel.open{display:block}
+.hist-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
+.hist-item{padding:8px 11px;border-radius:7px;margin-bottom:5px;background:var(--bg2);border:.5px solid var(--border);display:flex;align-items:center;gap:10px}
+.hist-url{flex:1;font-size:11px;font-family:var(--mono);color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-score{font-size:12px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+
+/* ── MAIN CONTENT ── */
+#main{display:block}
+
+/* ── SCORE SECTION ── */
 .score-section{padding:18px 16px 14px;display:flex;align-items:center;gap:16px;border-bottom:.5px solid var(--border)}
 .score-ring-wrap{position:relative;flex-shrink:0}
 .score-ring-wrap svg{transform:rotate(-90deg)}
 .score-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.score-num{font-size:28px;font-weight:700;font-family:var(--mono);line-height:1}
+#ring-num{font-size:28px;font-weight:700;font-family:var(--mono);line-height:1;color:var(--text3)}
 .score-denom{font-size:10px;color:var(--text3);margin-top:1px}
 .score-info{flex:1}
-.verdict-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.verdict-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
 .verdict-badge{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700}
-.verdict-badge svg{width:15px;height:15px}
-.risk-tag{font-size:10px;font-weight:600;letter-spacing:.5px;padding:2px 8px;border-radius:10px}
-.verdict-desc{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:9px}
-.threat-tag{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;letter-spacing:.3px}
+#vicon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+#vtext{font-size:14px;font-weight:700;color:var(--text3)}
+.risk-tag{font-size:10px;font-weight:600;letter-spacing:.5px;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text3)}
+#vsub{font-size:10px;color:var(--text3)}
+#vdesc{font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:9px;margin-top:4px}
+#vtag{display:inline-block;font-size:10px;font-weight:600;padding:3px 10px;border-radius:6px;letter-spacing:.3px;border:1px solid var(--border);color:var(--text3);background:transparent}
+
+/* ── INFO GRID ── */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-bottom:.5px solid var(--border)}
-.info-card{padding:11px 14px;background:var(--bg);transition:background .15s}
-.info-card:hover{background:var(--bg2)}
-.info-card-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:4px}
-.info-card-label svg{width:9px;height:9px}
+.info-card{padding:11px 14px;background:var(--bg)}
+.info-card-label{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
 .info-card-value{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
 .info-card-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* ── TRUST ROW ── */
 .trust-row{padding:10px 14px;border-bottom:.5px solid var(--border);background:var(--bg);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .trust-label-small{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
-.trust-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:.5px solid}
-.trust-badge svg{width:9px;height:9px}
-.trust-sub{font-size:10px;color:var(--text3);font-family:var(--mono)}
+#trust-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--border);color:var(--text3)}
+#trust-desc{font-size:10px;color:var(--text3);font-family:var(--mono)}
+
+/* ── INTEL CARDS ── */
+.intel-section{padding:11px 16px;border-bottom:.5px solid var(--border)}
+.section-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.intel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.icard{padding:8px 10px;border-radius:7px;border:.5px solid var(--border);background:var(--bg2)}
+.icard-label{font-size:9px;color:var(--text3);margin-bottom:4px;font-family:var(--mono)}
+.icard-val{font-size:11px;font-weight:600;font-family:var(--mono)}
+.icard.s-clean .icard-val{color:#3fb950}
+.icard.s-threat .icard-val{color:#f85149}
+.icard.s-warn   .icard-val{color:#d29922}
+.icard.s-pend   .icard-val{color:var(--text3)}
+
+/* ── SIGNALS ── */
 .security-section{padding:11px 16px;border-bottom:.5px solid var(--border)}
-.section-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.section-label svg{width:10px;height:10px}
-.signal-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;margin-bottom:4px;background:var(--bg2);border:.5px solid var(--border)}
-.signal-item:last-child{margin-bottom:0}
-.signal-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.signal-text{font-size:11px;color:var(--text2);flex:1}
-.signal-val{font-size:10px;font-weight:600;font-family:var(--mono)}
+.sig-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;margin-bottom:4px;background:var(--bg2);border:.5px solid var(--border)}
+.sig-ico{font-size:12px;font-weight:700;flex-shrink:0;width:16px;text-align:center}
+.sig-txt{font-size:11px;color:var(--text2);flex:1}
+
+/* ── BUTTONS ── */
 .rescan-btn{width:calc(100% - 32px);margin:10px 16px 0;padding:10px;border-radius:9px;background:var(--bg3);border:.5px solid var(--border2);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
 .rescan-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
-.rescan-btn svg{width:12px;height:12px}
-.open-dash{display:block;width:calc(100% - 32px);margin:10px 16px 0;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s}
+.open-dash{display:block;width:calc(100% - 32px);margin:10px 16px 0;padding:12px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;text-align:center}
 .open-dash:hover{opacity:.88}
-.popup-footer{padding:8px 16px;border-top:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);margin-top:10px}
-.footer-brand{font-size:10px;color:var(--text3);font-weight:500}
-.footer-brand em{color:var(--accent);font-style:normal;font-weight:600}
-.footer-time{font-size:10px;font-family:var(--mono);color:var(--text3)}
-.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px}
+
+/* ── LOADING OVERLAY ── */
+#load-fill{display:none;position:fixed;inset:56px 0 0 0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:100}
+#load-fill.on{display:flex}
 .spinner{width:36px;height:36px;border-radius:50%;border:2px solid var(--bg3);border-top-color:var(--accent);animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:11px;color:var(--text3);font-family:var(--mono)}
-.hist-view{display:none;padding:12px 16px}
-.hist-view-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:10px}
-.hist-item{padding:8px 11px;border-radius:7px;margin-bottom:5px;background:var(--bg2);border:.5px solid var(--border);display:flex;align-items:center;gap:10px}
-.hist-url{flex:1;font-size:11px;font-family:var(--mono);color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hist-score{font-size:12px;font-weight:700;font-family:var(--mono)}
-.hist-time{font-size:10px;color:var(--text3);font-family:var(--mono)}
+#load-msg{font-size:11px;color:var(--text3);font-family:var(--mono)}
+
+/* ── FOOTER ── */
+.popup-footer{padding:8px 16px;border-top:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);margin-top:10px}
+.footer-brand{font-size:10px;color:var(--text3)}
+.footer-brand em{color:var(--accent);font-style:normal;font-weight:600}
+#foot-time{font-size:10px;font-family:var(--mono);color:var(--text3)}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="header">
   <div class="logo">
     <div class="logo-icon">
@@ -99,123 +129,133 @@ body{width:380px;min-height:520px;font-family:var(--font);background:var(--bg);c
   <div class="header-right">
     <span class="ver-tag">v4.2</span>
     <span class="ai-tag">AI</span>
-    <button class="history-btn" id="fs-history-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>
+    <button class="history-btn" id="history-btn">⏱ HISTORY</button>
+  </div>
+</div>
+
+<!-- URL BAR -->
+<div class="url-bar" id="url-bar">Scanning current page…</div>
+
+<!-- LOADING OVERLAY (sits above result content) -->
+<div id="load-fill">
+  <div class="spinner"></div>
+  <div id="load-msg">Analyzing URL…</div>
+</div>
+
+<!-- HISTORY PANEL -->
+<div id="hist-panel">
+  <div class="hist-label">Recent scans</div>
+  <div id="hist-list"></div>
+</div>
+
+<!-- MAIN RESULT -->
+<div id="main">
+
+  <!-- Score Ring -->
+  <div class="score-section">
+    <div class="score-ring-wrap">
+      <svg width="88" height="88" viewBox="0 0 88 88">
+        <circle cx="44" cy="44" r="32" fill="none" stroke="#1e2430" stroke-width="7"/>
+        <circle id="ring-arc" cx="44" cy="44" r="32" fill="none" stroke="#1e2430"
+          stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="201" stroke-dashoffset="201"
+          style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1),stroke .4s"/>
       </svg>
-      HISTORY
-    </button>
-  </div>
-</div>
-
-<div class="url-bar" id="fs-url-display">Scanning current page…</div>
-
-<div class="hist-view" id="fs-hist-view">
-  <div class="hist-view-label">Recent scans</div>
-  <div id="fs-hist-list"></div>
-</div>
-
-<div id="fs-main-content">
-  <div class="loading-screen" id="fs-loading">
-    <div class="spinner"></div>
-    <div class="loading-text">Analyzing URL…</div>
-  </div>
-
-  <div id="fs-result-view" style="display:none">
-    <div class="score-section">
-      <div class="score-ring-wrap">
-        <svg width="88" height="88" viewBox="0 0 88 88">
-          <circle cx="44" cy="44" r="36" fill="none" stroke="#1e2430" stroke-width="7"/>
-          <circle cx="44" cy="44" r="36" fill="none" stroke-width="7" stroke-linecap="round"
-            stroke-dasharray="226" stroke-dashoffset="226" id="fs-score-arc"
-            style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
-        </svg>
-        <div class="score-center">
-          <div class="score-num" id="fs-score-num">--</div>
-          <div class="score-denom">/100</div>
-        </div>
-      </div>
-      <div class="score-info">
-        <div class="verdict-row">
-          <div class="verdict-badge" id="fs-verdict-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-              <path d="M12 2L4 6v6c0 5.2 3.5 9.8 8 11 4.5-1.2 8-5.8 8-11V6z"/>
-              <path d="M9 12l2 2 4-4"/>
-            </svg>
-            <span id="fs-verdict-text">SAFE</span>
-          </div>
-          <span class="risk-tag" id="fs-risk-tag">LOW RISK</span>
-        </div>
-        <div class="verdict-desc" id="fs-verdict-desc">Analyzing…</div>
-        <div class="threat-tag" id="fs-threat-tag">Safe</div>
+      <div class="score-center">
+        <div id="ring-num">--</div>
+        <div class="score-denom">/100</div>
       </div>
     </div>
-
-    <div class="info-grid">
-      <div class="info-card">
-        <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-          DOMAIN
+    <div class="score-info">
+      <div class="verdict-row">
+        <div class="verdict-badge">
+          <div id="vicon">?</div>
+          <span id="vtext">SCANNING</span>
         </div>
-        <div class="info-card-value" id="fs-card-domain">—</div>
-        <div class="info-card-sub" id="fs-card-tld">—</div>
+        <span id="vsub" class="risk-tag">—</span>
       </div>
-      <div class="info-card">
-        <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          PROTOCOL
-        </div>
-        <div class="info-card-value" id="fs-card-protocol">—</div>
-        <div class="info-card-sub" id="fs-card-protocol-sub">—</div>
-      </div>
-      <div class="info-card">
-        <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-          SITE TYPE
-        </div>
-        <div class="info-card-value" id="fs-card-sitetype">—</div>
-        <div class="info-card-sub" id="fs-card-sitetype-sub">—</div>
-      </div>
-      <div class="info-card">
-        <div class="info-card-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          DOMAIN AGE
-        </div>
-        <div class="info-card-value" id="fs-card-age">—</div>
-        <div class="info-card-sub" id="fs-card-age-sub">—</div>
-      </div>
-    </div>
-
-    <div class="trust-row">
-      <span class="trust-label-small">DOMAIN TRUST LEVEL</span>
-      <div class="trust-badge" id="fs-trust-badge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M9 11l3 3L22 4"/></svg>
-        <span id="fs-trust-label">Established</span>
-      </div>
-      <span class="trust-sub" id="fs-trust-sub">—</span>
-    </div>
-
-    <div class="security-section">
-      <div class="section-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L4 6v6c0 5.2 3.5 9.8 8 11 4.5-1.2 8-5.8 8-11V6z"/></svg>
-        SECURITY ANALYSIS — <span id="fs-signal-count" style="color:var(--text);margin-left:3px">0</span> SIGNAL(S)
-      </div>
-      <div id="fs-signals-container"></div>
-    </div>
-
-    <button class="rescan-btn" id="fs-rescan-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23,4 23,10 17,10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-      RE-SCAN THIS PAGE
-    </button>
-
-    <button class="open-dash" id="fs-open-dash-btn">Open Full Dashboard →</button>
-
-    <div class="popup-footer">
-      <div class="footer-brand"><em>FraudShield</em> v4.2 · AI Fraud Detection</div>
-      <div class="footer-time" id="fs-footer-time">—</div>
+      <div id="vdesc">Querying ML model and intelligence databases.</div>
+      <div id="vtag">Loading…</div>
     </div>
   </div>
-</div>
+
+  <!-- Info Grid -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label">🌐 DOMAIN</div>
+      <div class="info-card-value" id="i-domain">—</div>
+      <div class="info-card-sub" id="i-tld">—</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">🔒 PROTOCOL</div>
+      <div class="info-card-value" id="i-proto">—</div>
+      <div class="info-card-sub" id="i-proto-sub">—</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">💻 SITE TYPE</div>
+      <div class="info-card-value" id="i-type">—</div>
+      <div class="info-card-sub" id="i-type-sub">—</div>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label">📅 DOMAIN AGE</div>
+      <div class="info-card-value" id="i-age">—</div>
+      <div class="info-card-sub" id="i-age-sub">—</div>
+    </div>
+  </div>
+
+  <!-- Trust -->
+  <div class="trust-row">
+    <span class="trust-label-small">DOMAIN TRUST</span>
+    <div id="trust-badge">Checking…</div>
+    <span id="trust-desc">—</span>
+  </div>
+
+  <!-- Intel Cards -->
+  <div class="intel-section">
+    <div class="section-label">⚡ THREAT INTELLIGENCE</div>
+    <div class="intel-grid">
+      <div class="icard s-pend" id="c-vt">
+        <div class="icard-label">VirusTotal</div>
+        <div class="icard-val" id="vt-val">Checking…</div>
+      </div>
+      <div class="icard s-pend" id="c-pt">
+        <div class="icard-label">PhishTank</div>
+        <div class="icard-val" id="pt-val">Checking…</div>
+      </div>
+      <div class="icard s-pend" id="c-op">
+        <div class="icard-label">OpenPhish</div>
+        <div class="icard-val" id="op-val">Checking…</div>
+      </div>
+      <div class="icard s-pend" id="c-sb">
+        <div class="icard-label">Safe Browse</div>
+        <div class="icard-val" id="sb-val">Checking…</div>
+      </div>
+      <div class="icard s-pend" id="c-ml">
+        <div class="icard-label">ML Model</div>
+        <div class="icard-val" id="ml-val">Checking…</div>
+      </div>
+      <div class="icard s-pend" id="c-gsb">
+        <div class="icard-label">Google SB</div>
+        <div class="icard-val" id="gsb-val">Checking…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signals -->
+  <div class="security-section">
+    <div class="section-label">🛡 SECURITY SIGNALS — <span id="sig-count">0</span></div>
+    <div id="sigs"></div>
+  </div>
+
+  <button class="rescan-btn" id="rescan-btn">⟳ RE-SCAN THIS PAGE</button>
+  <button class="open-dash" id="open-dash-btn">Open Full Dashboard →</button>
+
+  <div class="popup-footer">
+    <div class="footer-brand"><em>FraudShield</em> v4.2 · AI Detection</div>
+    <div id="foot-time">—</div>
+  </div>
+
+</div><!-- /#main -->
 
 <script src="popup.js"></script>
 </body>

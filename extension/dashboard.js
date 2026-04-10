@@ -161,8 +161,8 @@ function toast(msg, type) {
 // ── Storage ───────────────────────────────────────────────────────────────────
 function loadFromStorage() {
   if (typeof chrome !== "undefined" && chrome.storage) {
-    chrome.storage.local.get(["scanHistory","fs_allowlist","fs_blocklist","fs_reports"], function(data) {
-      var raw = data.scanHistory || [];
+    chrome.storage.sync.get(["fs_history","fs_allowlist","fs_blocklist","fs_reports"], function(data) {
+      var raw = data.fs_history || [];
       scanHistory = raw.map(function(e) {
         var v = getVerdict(e.score || 0);
         return Object.assign({}, e, { label:e.label||v.label, cls:e.cls||v.cls, time:e.time||tNow(), ts:e.ts||Date.now() });
@@ -180,7 +180,7 @@ function loadFromStorage() {
 
 function saveToStorage() {
   if (typeof chrome !== "undefined" && chrome.storage) {
-    chrome.storage.local.set({ fs_allowlist:allowList, fs_blocklist:blockList, fs_reports:fpReports });
+    chrome.storage.sync.set({ fs_history:scanHistory, fs_allowlist:allowList, fs_blocklist:blockList, fs_reports:fpReports });
   }
 }
 

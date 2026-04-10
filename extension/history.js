@@ -23,12 +23,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadHistory() {
-  chrome.storage.local.get("scanHistory", (result) => {
-    allHistory = result.scanHistory || [];
+  chrome.storage.sync.get("fs_history", (result) => {
+    allHistory = result.fs_history || [];
     updateStats();
     renderHistory();
   });
 }
+
+// Listen for live updates from background scan
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "SCAN_COMPLETE") loadHistory();
+});
 
 function updateStats() {
   const total  = allHistory.length;
@@ -125,7 +130,7 @@ function renderHistory() {
 
 function clearHistory() {
   if (confirm("Clear all scan history?")) {
-    chrome.storage.local.remove("scanHistory", () => {
+    chrome.storage.sync.remove("fs_history", () => {
       allHistory = [];
       updateStats();
       renderHistory();
