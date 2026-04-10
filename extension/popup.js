@@ -80,71 +80,32 @@ async function checkVirusTotal(url){
   }
 }
 
-// ── REAL WHOIS (multi-source fallback) ───────────────────────────────────────
-// ── WHOIS via whoisfreaks.com free tier (CORS-friendly) ──────────────────────
+// ── WHOIS via backend proxy (no CORS issues) ─────────────────────────────────
 async function checkWHOIS(hostname){
   const apex = hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
-
-  // Use whoisfreaks free endpoint — returns JSON with CORS headers
   try {
     const resp = await fetchWithTimeout(
-      `https://api.whoisfreaks.com/v1.0/whois?whois=live&domainName=${apex}&apiKey=free`,
+      `${CONFIG.BACKEND_URL.replace("/predict","")}/whois/${apex}`,
       { headers: { Accept: "application/json" } },
       CONFIG.WHOIS_TIMEOUT
     );
     if (resp.ok) {
       const d = await resp.json();
-      const raw = d?.create_date || d?.creation_date || d?.created_date || null;
-      if (raw) {
-        const created = new Date(raw);
-        if (!isNaN(created)) {
-          const diffDays = Math.floor((Date.now() - created) / 86400000);
-          const diffMos  = Math.floor(diffDays / 30);
-          const diffYrs  = Math.floor(diffDays / 365);
-          let ageLabel, ageSub, ageThreat;
-          if (diffDays < 30)    { ageLabel = diffDays+"d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-          else if (diffMos < 6) { ageLabel = diffMos+"mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
-          else if (diffMos < 12){ ageLabel = diffMos+"mo";  ageSub = "Est. "+created.getFullYear(); ageThreat = "low"; }
-          else                  { ageLabel = diffYrs+(diffYrs===1?" yr":" yrs"); ageSub = "Est. "+created.getFullYear(); ageThreat = "low"; }
-          return { available:true, ageLabel, ageSub, ageThreat, diffDays, diffMos, diffYrs,
-                   created: created.toISOString().split("T")[0],
-                   registrar: d?.registrar_name || null };
-        }
-      }
+      if (!d.age_years && d.age_years !== 0) return { available: false };
+      const diffYrs  = d.age_years;
+      const diffMos  = diffYrs * 12;
+      const diffDays = diffYrs * 365;
+      let ageLabel, ageSub, ageThreat;
+      if (diffDays < 30)    { ageLabel = diffDays+"d";           ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
+      else if (diffMos < 6) { ageLabel = diffMos+"mo";           ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
+      else if (diffYrs < 1) { ageLabel = diffMos+"mo";           ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
+      else                  { ageLabel = diffYrs+(diffYrs===1?" yr":" yrs"); ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
+      return { available: true, ageLabel, ageSub, ageThreat,
+               diffDays, diffMos, diffYrs,
+               created: d.created || null,
+               registrar: d.registrar || null };
     }
   } catch(e) {}
-
-  // Fallback: rdap.co free proxy (CORS-enabled wrapper)
-  try {
-    const resp2 = await fetchWithTimeout(
-      `https://www.rdap.net/domain/${apex}`,
-      { headers: { Accept: "application/json" } },
-      CONFIG.WHOIS_TIMEOUT
-    );
-    if (resp2.ok) {
-      const d = await resp2.json();
-      const events = d?.events || [];
-      const regEvent = events.find(e => e.eventAction === "registration");
-      const raw = regEvent?.eventDate || null;
-      if (raw) {
-        const created = new Date(raw);
-        if (!isNaN(created)) {
-          const diffDays = Math.floor((Date.now() - created) / 86400000);
-          const diffMos  = Math.floor(diffDays / 30);
-          const diffYrs  = Math.floor(diffDays / 365);
-          let ageLabel, ageSub, ageThreat;
-          if (diffDays < 30)    { ageLabel = diffDays+"d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-          else if (diffMos < 6) { ageLabel = diffMos+"mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
-          else if (diffMos < 12){ ageLabel = diffMos+"mo";  ageSub = "Est. "+created.getFullYear(); ageThreat = "low"; }
-          else                  { ageLabel = diffYrs+(diffYrs===1?" yr":" yrs"); ageSub = "Est. "+created.getFullYear(); ageThreat = "low"; }
-          const registrar = d?.entities?.find(e=>e.roles?.includes("registrar"))?.vcardArray?.[1]?.find(v=>v[0]==="fn")?.[3] || null;
-          return { available:true, ageLabel, ageSub, ageThreat, diffDays, diffMos, diffYrs,
-                   created: created.toISOString().split("T")[0], registrar };
-        }
-      }
-    }
-  } catch(e) {}
-
   return { available: false };
 }
 

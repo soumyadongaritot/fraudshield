@@ -25,37 +25,21 @@ function fetchWithTimeout(url,options,ms){
   });
 }
 
-// ── Real WHOIS (RDAP multi-source fallback) ───────────────────────────────────
-const RDAP_SERVERS={
-  "com":"https://rdap.verisign.com/com/v1/","net":"https://rdap.verisign.com/net/v1/",
-  "org":"https://rdap.publicinterestregistry.org/rdap/","io":"https://rdap.nic.io/",
-  "co":"https://rdap.nic.co/","ai":"https://rdap.nic.ai/","dev":"https://rdap.nic.google/",
-  "app":"https://rdap.nic.google/","in":"https://rdap.registry.in/",
-  "uk":"https://rdap.nominet.uk/","de":"https://rdap.denic.de/",
-  "xyz":"https://rdap.nic.xyz/","info":"https://rdap.afilias.net/rdap/",
-};
-
+// ── WHOIS via backend proxy ───────────────────────────────────────────────────
 async function checkWHOIS(hostname){
   const apex=hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
-  const tld=apex.split(".").pop();
-  const server=RDAP_SERVERS[tld];
-  if(!server) return{available:false};
   try{
-    const resp=await fetchWithTimeout(`${server}domain/${apex}`,{headers:{Accept:"application/rdap+json"}},CONFIG.WHOIS_TIMEOUT);
+    const resp=await fetchWithTimeout(
+      `${CONFIG.BACKEND_URL.replace("/predict","")}/whois/${apex}`,
+      {headers:{Accept:"application/json"}},
+      CONFIG.WHOIS_TIMEOUT
+    );
     if(resp.ok){
       const d=await resp.json();
-      const events=d?.events||[];
-      const regEvent=events.find(e=>e.eventAction==="registration");
-      const raw=regEvent?.eventDate||null;
-      if(raw){
-        const created=new Date(raw);
-        if(!isNaN(created)){
-          const diffDays=Math.floor((Date.now()-created)/86400000);
-          const diffMos=Math.floor(diffDays/30);
-          const diffYrs=Math.floor(diffDays/365);
-          return{available:true,diffDays,diffMos,diffYrs,created:created.toISOString().split("T")[0]};
-        }
-      }
+      if(!d.age_years&&d.age_years!==0) return{available:false};
+      const diffYrs=d.age_years, diffMos=diffYrs*12, diffDays=diffYrs*365;
+      return{available:true,diffDays,diffMos,diffYrs,
+             created:d.created||null,registrar:d.registrar||null};
     }
   }catch(e){}
   return{available:false};
