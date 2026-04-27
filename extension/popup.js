@@ -65,7 +65,7 @@ async function checkVirusTotal(url){
       }
     }
 
-    // Submit for fresh scan — don't poll, return pending immediately
+    // Submit for fresh scan
     const sub=await fetchWithTimeout(
       "https://www.virustotal.com/api/v3/urls",
       {method:"POST",headers:{"x-apikey":key,"Content-Type":"application/x-www-form-urlencoded"},
@@ -73,39 +73,69 @@ async function checkVirusTotal(url){
       CONFIG.VT_TIMEOUT
     );
     if(!sub.ok) return{available:false,reason:"Submit failed"};
-    // Scan submitted but not yet complete — don't block, report as pending
+    const sd=await sub.json();
+    const id=sd?.data?.id;
+    if(!id) return{available:false,reason:"No analysis ID"};
+
+    // Poll up to 3 times (2s apart)
+    for(let i=0;i<3;i++){
+      await new Promise(r=>setTimeout(r,2000));
+      const poll=await fetchWithTimeout(
+        `https://www.virustotal.com/api/v3/analyses/${id}`,
+        {headers:{"x-apikey":key}},
+        CONFIG.VT_TIMEOUT
+      );
+      if(poll.ok){
+        const pd=await poll.json();
+        const stats=pd?.data?.attributes?.stats;
+        if(stats&&pd?.data?.attributes?.status==="completed"){
+          const malicious=stats.malicious||0,suspicious=stats.suspicious||0;
+          const total=Object.values(stats).reduce((a,b)=>a+b,0);
+          return{available:true,malicious,suspicious,total,
+                 label:malicious>0?`${malicious}/${total} engines`:`0/${total} engines`,
+                 status:malicious>0?"threat":suspicious>0?"warn":"clean"};
+        }
+      }
+    }
     return{available:false,reason:"Scan pending"};
   }catch(e){
     return{available:false,reason:e.message==="TIMEOUT"?"Timeout":"API error"};
   }
 }
 
-// ── WHOIS via backend proxy ───────────────────────────────────────────────────
+// ── REAL WHOIS (who-dat.as93.net — free, no key needed) ──────────────────────
 async function checkWHOIS(hostname){
-  const apex = hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
-  try {
-    const resp = await fetchWithTimeout(
-      `${CONFIG.BACKEND_URL.replace("/predict","")}/whois/${apex}`,
-      { headers: { Accept: "application/json" } },
+  const apex=hostname.replace(/^www\./,"").split(".").slice(-2).join(".");
+  try{
+    const resp=await fetchWithTimeout(
+      `https://who-dat.as93.net/${apex}`,
+      {headers:{Accept:"application/json"}},
       CONFIG.WHOIS_TIMEOUT
     );
-    if (resp.ok) {
-      const d = await resp.json();
-      if (!d.available || !d.age_years) return { available: false };
-      const diffYrs  = d.age_years;
-      const diffMos  = diffYrs * 12;
-      const diffDays = diffYrs * 365;
-      let ageLabel, ageSub, ageThreat;
-      if (diffDays < 30)    { ageLabel = diffDays+"d";  ageSub = "⚠️ Brand new domain"; ageThreat = "high"; }
-      else if (diffMos < 6) { ageLabel = diffMos+"mo";  ageSub = "⚠️ Very new domain";  ageThreat = "medium"; }
-      else if (diffYrs < 1) { ageLabel = diffMos+"mo";  ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
-      else                  { ageLabel = diffYrs+(diffYrs===1?" yr":" yrs"); ageSub = "Est. "+(d.created||"").slice(0,4); ageThreat = "low"; }
-      return { available:true, ageLabel, ageSub, ageThreat,
-               diffDays, diffMos, diffYrs,
-               created: d.created||null, registrar: d.registrar||null };
-    }
-  } catch(e) {}
-  return { available: false };
+    if(!resp.ok) return{available:false};
+    const d=await resp.json();
+
+    const raw=d?.domain?.created_date||d?.registrar?.created_date||
+              d?.created_date||d?.creation_date||(d?.domain?.dates||[])[0]||null;
+    if(!raw) return{available:false};
+
+    const created=new Date(Array.isArray(raw)?raw[0]:raw);
+    if(isNaN(created)) return{available:false};
+
+    const diffDays=Math.floor((Date.now()-created)/86400000);
+    const diffMos=Math.floor(diffDays/30);
+    const diffYrs=Math.floor(diffDays/365);
+
+    let ageLabel,ageSub,ageThreat;
+    if(diffDays<30){    ageLabel=diffDays+"d";    ageSub="⚠️ Brand new domain"; ageThreat="high";}
+    else if(diffMos<6){ ageLabel=diffMos+"mo";    ageSub="⚠️ Very new domain";  ageThreat="medium";}
+    else if(diffMos<12){ageLabel=diffMos+"mo";    ageSub="Est. "+created.getFullYear(); ageThreat="low";}
+    else{               ageLabel=diffYrs+(diffYrs===1?" yr":" yrs"); ageSub="Est. "+created.getFullYear(); ageThreat="low";}
+
+    return{available:true,ageLabel,ageSub,ageThreat,diffDays,diffMos,diffYrs,
+           created:created.toISOString().split("T")[0],
+           registrar:d?.registrar?.name||d?.domain?.registrar||null};
+  }catch(e){ return{available:false}; }
 }
 
 // ── ENHANCED HEURISTIC SCORER (50+ signals) ───────────────────────────────────
@@ -398,10 +428,10 @@ async function doScan(url){
   ["c-vt","c-pt","c-op","c-sb","c-ml","c-gsb"].forEach(id=>{const c=$(id);if(c)c.className="icard s-pend";});
   ["vt-val","pt-val","op-val","sb-val","ml-val","gsb-val"].forEach(id=>set(id,"Checking…"));
 
-  let score=null, source="heuristic", whois=null, vt=null;
+  let score=null, source="api", whois=null, vt=null;
   let hostname=""; try{hostname=new URL(url).hostname;}catch(e){}
 
-  // 1. Allow/blocklist check
+  // 1. Allow/blocklist (instant)
   try{
     const data=await chrome.storage.sync.get(["fs_allowlist","fs_blocklist"]);
     const allow=data.fs_allowlist||[], block=data.fs_blocklist||[];
@@ -410,59 +440,50 @@ async function doScan(url){
     else if(block.some(x=>url.includes(x.url)||domain.includes(x.url))){score=0;source="blocklist";}
   }catch(e){}
 
-  // 2. INSTANT heuristic — show result immediately so popup never hangs
+  // 2. Run backend ML + WHOIS + VT all in parallel — wait for all
+  if(score===null){
+    set("load-msg","Running ML model & threat checks…");
+    const backendPromise = fetchWithTimeout(
+      CONFIG.BACKEND_URL,
+      {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})},
+      CONFIG.BACKEND_TIMEOUT
+    ).then(async r=>{
+      if(!r.ok) return null;
+      const d=await r.json();
+      if(typeof d.score==="number")             return Math.round(d.score);
+      if(typeof d.safety_score==="number")      return Math.round(d.safety_score);
+      if(typeof d.phishing_score==="number")    return Math.round(d.phishing_score);
+      if(typeof d.prediction==="number")        return d.prediction<=1?Math.round((1-d.prediction)*100):Math.round(d.prediction);
+      if(typeof d.probability==="number")       return Math.round((1-d.probability)*100);
+      return null;
+    }).catch(()=>null);
+
+    const [mlScore,whoisRes,vtRes]=await Promise.all([
+      backendPromise,
+      checkWHOIS(hostname),
+      checkVirusTotal(url)
+    ]);
+
+    whois=whoisRes||{available:false};
+    vt=vtRes||{available:false};
+
+    if(mlScore!==null){ score=Math.max(0,Math.min(100,mlScore)); source="api"; }
+  }
+
+  // 3. Heuristic fallback ONLY if backend completely failed
   if(score===null){
     score=heuristicScore(url);
-    source="heuristic";
-    set("load-msg","Quick analysis complete — enriching with live data…");
-    applyScore(score,url,source,null,null); // show immediately
+    source="fallback";
+    set("load-msg","Backend offline — using local analysis…");
   }
 
-  // 3. WHOIS + VirusTotal in parallel (capped at 8s total)
-  const enrichTimeout=new Promise(r=>setTimeout(r,8000));
-  const enrichData=Promise.allSettled([
-    checkWHOIS(hostname),
-    checkVirusTotal(url)
-  ]);
-  const [whoisRes,vtRes]=await Promise.race([
-    enrichData,
-    enrichTimeout.then(()=>[
-      {status:"fulfilled",value:{available:false}},
-      {status:"fulfilled",value:{available:false}}
-    ])
-  ]);
-  whois=whoisRes?.status==="fulfilled"?whoisRes.value:{available:false};
-  vt=vtRes?.status==="fulfilled"?vtRes.value:{available:false};
-
-  // 4. Backend ML (short timeout — 8s max, don't block UI)
-  if(source==="heuristic"){
-    try{
-      set("load-msg","Running ML model…");
-      const resp=await fetchWithTimeout(
-        CONFIG.BACKEND_URL,
-        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url})},
-        8000  // hard 8s cap — never freeze the popup
-      );
-      if(resp.ok){
-        const d=await resp.json();
-        let mlScore=null;
-        if(typeof d.score==="number")             mlScore=Math.round(d.score);
-        else if(typeof d.safety_score==="number") mlScore=Math.round(d.safety_score);
-        else if(typeof d.phishing_score==="number") mlScore=Math.round(d.phishing_score);
-        else if(typeof d.prediction==="number")   mlScore=d.prediction<=1?Math.round((1-d.prediction)*100):Math.round(d.prediction);
-        else if(typeof d.probability==="number")  mlScore=Math.round((1-d.probability)*100);
-        if(mlScore!==null){ score=Math.max(0,Math.min(100,mlScore)); source="api"; }
-      }
-    }catch(err){ /* backend cold/offline — keep heuristic score */ }
-  }
-
-  // 5. Adjust score by WHOIS age + VT
+  // 4. Adjust by WHOIS age + VT
   if(source!=="allowlist"&&source!=="blocklist"){
     score=adjustForAge(score,whois);
     if(vt?.available){
-      if(vt.malicious>3)      score=Math.min(score,15);
-      else if(vt.malicious>0) score=Math.min(score,35);
-      else if(vt.suspicious>2)score=Math.min(score,50);
+      if(vt.malicious>3)       score=Math.min(score,15);
+      else if(vt.malicious>0)  score=Math.min(score,35);
+      else if(vt.suspicious>2) score=Math.min(score,50);
     }
   }
 
@@ -515,14 +536,8 @@ async function updateBadge(score){
 }
 
 function openDash(){try{chrome.tabs.create({url:chrome.runtime.getURL("dashboard.html")});window.close();}catch(e){}}
-function openHistory(){try{chrome.tabs.create({url:chrome.runtime.getURL("history.html")});window.close();}catch(e){}}
 
 document.addEventListener("DOMContentLoaded",async()=>{
-  // Button wiring — CSP-safe, no inline onclick
-  const histBtn=$("history-btn"); if(histBtn) histBtn.addEventListener("click",openHistory);
-  const rescanBtn=$("rescan-btn"); if(rescanBtn) rescanBtn.addEventListener("click",doRescan);
-  const dashBtn=$("open-dash-btn"); if(dashBtn) dashBtn.addEventListener("click",openDash);
-
   set("foot-time",fmtTime());
   showLoading("Getting current tab…");
   await new Promise(r=>setTimeout(r,150));
