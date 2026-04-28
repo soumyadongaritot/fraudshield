@@ -221,3 +221,8 @@ This project is licensed under the [MIT License](LICENSE).
 - [Scikit-learn](https://scikit-learn.org) — ML library
 - [FastAPI](https://fastapi.tiangolo.com) — Backend framework
 - Samsung Innovation Campus — Project guidance and support
+## 🔗 Project Links
+
+- 📁 **GitHub Repository:** https://github.com/soumyadongaritot/fraudshield
+- 🌐 **Live Backend:**`https://fraudshield-1-pkvb.onrender.com`
+- 📊 **Demo Video:** [https://youtu.be/qO4IJm6Xprw?si=QP8G_XD8Svgw56xP]
