@@ -45,5 +45,6 @@
     "http://*/*"
   ],
   "content_security_policy": {
-  "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co https://www.virustotal.com https://who-dat.as93.net https://rdap.org https://rdap.verisign.com https://rdap.nic.ai https://rdap.nic.io https://rdap.nominet.uk https://api.whois.vu http://ip-api.com"
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co https://www.virustotal.com https://who-dat.as93.net https://rdap.org https://rdap.verisign.com https://rdap.nic.ai https://rdap.nic.io https://rdap.nominet.uk https://api.whois.vu http://ip-api.com"
+  }
 }
