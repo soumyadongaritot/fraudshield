@@ -26,9 +26,6 @@
       "run_at": "document_idle"
     }
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://www.virustotal.com https://api.whoisfreaks.com https://www.rdap.net https://bgfztnukkgcakeogpvdi.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com"
-  },
   "web_accessible_resources": [
     {
       "resources": ["dashboard.html", "history.html", "icons/*"],
@@ -46,5 +43,8 @@
   "host_permissions": [
     "https://*/*",
     "http://*/*"
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://fraudshield-1-pkvb.onrender.com https://fraudshield-2u9l.onrender.com https://bgfztnukkgcakeogpvdi.supabase.co"
+  }
 }
